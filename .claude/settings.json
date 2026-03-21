@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/hann/Project/caring-back/caring-back/**)",
+      "Bash(ls -la /Users/hann/Project/caring-back/caring-back/CARING-Back-*/build.gradle)",
+      "Bash(grep -r \"class.*Application\" /Users/hann/Project/caring-back/caring-back/CARING-Back-*/src/main/java --include=\"*.java\")",
+      "Read(//Users/hann/Project/caring-back/**)",
+      "Bash(mkdir -p gradle/wrapper)",
+      "Bash(cp /Users/hann/Project/caring-back/caring-back/gradle/wrapper/* gradle/wrapper/)",
+      "Bash(cp /Users/hann/Project/caring-back/caring-back/gradlew .)",
+      "Bash(cp /Users/hann/Project/caring-back/caring-back/gradlew.bat .)",
+      "Bash(chmod +x gradlew)",
+      "Bash(BASE=/Users/hann/Project/caring-server-monolithic/src/main/java/com/caring)",
+      "Bash(mkdir -p $BASE)",
+      "Bash(./gradlew compileJava)"
+    ]
+  }
+}
