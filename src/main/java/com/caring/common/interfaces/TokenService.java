@@ -1,6 +1,6 @@
 package com.caring.common.interfaces;
 
-import com.caring.common.dto.vo.JwtToken;
+import com.caring.common.dto.JwtToken;
 import org.springframework.security.core.Authentication;
 
 public interface TokenService {

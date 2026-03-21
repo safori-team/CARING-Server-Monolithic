@@ -1,36 +1,35 @@
 package com.caring.common.util;
 
-import java.security.SecureRandom;
 import java.util.Random;
 
-/**
- * 랜덤 숫자 생성 유틸리티
- */
 public class RandomNumberUtil {
 
-    private static final Random RANDOM = new SecureRandom();
+    private final static int MEMBER_CODE_LENGTH = 7;
 
-    /**
-     * 지정된 길이의 랜덤 숫자 문자열 생성
-     * @param length 생성할 숫자 문자열 길이
-     * @return 랜덤 숫자 문자열
-     */
-    public static String generateRandomNumber(int length) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < length; i++) {
-            sb.append(RANDOM.nextInt(10));
+    public static String generateRandomNumber(int passwordLength) {
+        int index = 0;
+        char[] charSet = new char[] {
+                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+                'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+                'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+        };	//배열안의 문자 숫자는 원하는대로
+
+        StringBuffer password = new StringBuffer();
+        Random random = new Random();
+
+        for (int i = 0; i < passwordLength ; i++) {
+            double rd = random.nextDouble();
+            index = (int) (charSet.length * rd);
+
+            password.append(charSet[index]);
         }
-        return sb.toString();
+        return password.toString();
     }
 
-    /**
-     * 지정된 범위 내의 랜덤 정수 생성
-     * @param min 최소값 (포함)
-     * @param max 최대값 (포함)
-     * @return 랜덤 정수
-     */
-    public static int generateRandomInt(int min, int max) {
-        return RANDOM.nextInt(max - min + 1) + min;
+    public static String generateRandomMemberCode(String prefix) {
+        String number = generateRandomNumber(MEMBER_CODE_LENGTH);
+        return prefix.concat(number);
     }
 }
-

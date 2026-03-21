@@ -12,7 +12,9 @@
       "Bash(chmod +x gradlew)",
       "Bash(BASE=/Users/hann/Project/caring-server-monolithic/src/main/java/com/caring)",
       "Bash(mkdir -p $BASE)",
-      "Bash(./gradlew compileJava)"
+      "Bash(./gradlew compileJava)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:api.github.com)"
     ]
   }
 }
