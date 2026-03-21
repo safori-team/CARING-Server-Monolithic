@@ -15,6 +15,9 @@
       "Bash(./gradlew compileJava)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:api.github.com)"
+    ],
+    "additionalDirectories": [
+      "/Users/hann/Project/caring-back/caring-back/CARING-Back-Common/src/main/java/com/caring/common/consts"
     ]
   }
 }
