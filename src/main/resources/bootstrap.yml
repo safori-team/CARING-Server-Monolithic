@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: caring-server
+  cloud:
+    config:
+      name: ${SPRING_CLOUD_CONFIG_NAME:${spring.application.name}}
+      allowOverride: true
+      overrideNone: true
+      fail-fast: false
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  cloud:
+    config:
+      uri: ${CONFIG_SERVER_URI:http://127.0.0.1:8888}
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  cloud:
+    config:
+      uri: ${CONFIG_SERVER_URI:http://config-service:8888}

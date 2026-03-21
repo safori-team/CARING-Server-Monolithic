@@ -2,13 +2,16 @@ server:
   port: ${SERVER_PORT:8080}
 
 spring:
+  config:
+    import: optional:file:.env[.properties]
+
   application:
     name: caring-server
 
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/caring}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
