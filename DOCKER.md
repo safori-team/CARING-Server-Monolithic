@@ -1,24 +1,21 @@
 ## Docker Run
 
-This project can run as a Spring Cloud Config client, using the existing MSA `config-service` build source from:
-
-- `/Users/hann/Project/caring-back/caring-back`
-
 ### Prerequisites
 
-Before starting the stack, make sure these are available in your shell or `.env`:
+`.env` 파일에 필요한 값을 채워야 합니다:
 
 ```dotenv
-GITHUB_USERNAME=your_github_username
-GITHUB_PASSWORD=your_github_token_or_password
-SPRING_CLOUD_CONFIG_NAME=caring-server
-DOCKER_DB_URL=jdbc:mysql://mysql:3306/caring?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
-DOCKER_DB_USERNAME=caring
-DOCKER_DB_PASSWORD=caring
+# --- 필수 ---
+TOKEN_SECRET_USER=<Base64 encoded, 최소 256bit>
+TOKEN_SECRET_GATEWAY=<Base64 encoded>
+TOKEN_SECRET_INTERNAL=<Base64 encoded>
+
+# --- 선택 (사용 시 필수) ---
+FCM_KEY_BASE64=<Firebase service account JSON을 Base64 인코딩>
+AI_SERVICE_BASE_URL=http://host.docker.internal:8090
 ```
 
-`SPRING_CLOUD_CONFIG_NAME` should match the config file name stored in your private config repository.
-For example, if the private repo contains `caring-server-docker.yml`, keep it as `caring-server`.
+DB, Redis는 compose에서 함께 띄우므로 기본값으로 동작합니다.
 
 ### Start
 
@@ -32,7 +29,7 @@ docker compose up --build
 docker compose down
 ```
 
-If you also want to remove the MySQL volume:
+볼륨까지 삭제:
 
 ```bash
 docker compose down -v
@@ -40,8 +37,6 @@ docker compose down -v
 
 ### Notes
 
-- The app runs with `SPRING_PROFILES_ACTIVE=docker` in Docker.
-- `config-service` is built from the MSA project source and exposed on `http://localhost:8888`.
-- Local `.env` loading still exists as a fallback path for non-Docker runs.
-- The Docker stack uses `DOCKER_DB_URL`, `DOCKER_DB_USERNAME`, and `DOCKER_DB_PASSWORD` so your local `.env` `DB_*` values do not leak into container networking by mistake.
-- Inside Docker, Redis is fixed to `redis:6379`.
+- `SPRING_PROFILES_ACTIVE=docker`로 실행됩니다.
+- MySQL, Redis가 compose에 포함되어 별도 설치가 필요 없습니다.
+- `.env`의 `DB_URL`은 로컬 직접 실행용이며, Docker에서는 compose가 오버라이드합니다.

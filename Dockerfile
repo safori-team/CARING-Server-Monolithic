@@ -14,9 +14,12 @@ FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
 COPY --from=builder /workspace/build/libs/*.jar app.jar
+COPY docker/entrypoint.sh /app/entrypoint.sh
+
+RUN chmod +x /app/entrypoint.sh
 
 ENV JAVA_OPTS=""
 
 EXPOSE 8080 9082
 
-ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]
+ENTRYPOINT ["/app/entrypoint.sh"]
