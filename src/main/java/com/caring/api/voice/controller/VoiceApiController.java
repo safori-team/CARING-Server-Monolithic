@@ -50,8 +50,9 @@ public class VoiceApiController {
     public ApiResponseDto<Long> uploadVoiceWithQuestion(@UserCode String username,
                                                         @RequestParam QuestionCategory questionCategory,
                                                         @RequestParam int questionIndex,
-                                                        @RequestParam String bucketUrl) {
+                                                        @RequestParam String bucketUrl,
+                                                        @RequestParam String recordedAt) {
         return ApiResponseDto.onSuccess(
-                uploadVoiceFileUsecase.execute(username, questionCategory, questionIndex, bucketUrl));
+                uploadVoiceFileUsecase.execute(username, questionCategory, questionIndex, bucketUrl, recordedAt));
     }
 }

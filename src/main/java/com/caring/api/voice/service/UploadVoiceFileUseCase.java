@@ -8,7 +8,8 @@ import com.caring.domain.user.adaptor.UserAdaptor;
 import com.caring.domain.user.entity.User;
 import com.caring.domain.voice.service.VoiceDomainService;
 import com.caring.domain.voice.entity.Voice;
-import com.caring.infra.ai.AiServerClient;
+import com.caring.infra.ai.hume.scheduler.DiaryBatchItem;
+import com.caring.infra.ai.hume.scheduler.HumeBatchScheduler;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -19,14 +20,25 @@ public class UploadVoiceFileUseCase {
 
     private final UserAdaptor userAdaptor;
     private final VoiceDomainService voiceDomainService;
-    private final AiServerClient aiServerClient;
+    private final HumeBatchScheduler humeBatchScheduler;
 
-    public Long execute(String username, QuestionCategory questionCategory, int questionIndex, String bucketUrl) {
+    public Long execute(String username, QuestionCategory questionCategory, int questionIndex,
+                        String bucketUrl, String recordedAt) {
         validateQuestion(questionCategory, questionIndex);
         User user = userAdaptor.queryUserByUsername(username);
         Voice voice = voiceDomainService.uploadVoiceFile(user, bucketUrl);
         voiceDomainService.linkVoiceQuestion(voice, questionCategory, questionIndex);
-        aiServerClient.sendVoiceForAnalysis(bucketUrl, voice.getId());
+
+        String questionText = UserServiceQuestionStaticValues.QUESTION_MAP
+                .get(questionCategory.name()).get(questionIndex);
+        humeBatchScheduler.enqueue(DiaryBatchItem.builder()
+                .userId(user.getUserUuid())
+                .userName(user.getName())
+                .question(questionText)
+                .s3Url(bucketUrl)
+                .recordedAt(recordedAt)
+                .build());
+
         return voice.getId();
     }
 
