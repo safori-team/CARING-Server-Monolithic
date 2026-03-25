@@ -4,6 +4,7 @@ import com.caring.infra.ai.hume.dto.callback.HumeCallbackPayload;
 import com.caring.infra.ai.hume.dto.callback.HumeInferencePrediction;
 import com.caring.infra.ai.hume.dto.callback.HumeModels;
 import com.caring.infra.ai.hume.dto.processed.EmotionAnalysis;
+import com.caring.infra.ai.hume.dto.processed.EmotionCategoryResult;
 import com.caring.infra.ai.hume.mapper.HumeResultMapper;
 import com.caring.infra.ai.hume.scheduler.DiaryBatchItem;
 import com.caring.infra.ai.hume.scheduler.HumeBatchScheduler;
@@ -75,7 +76,7 @@ public class HumeCallbackController {
         // 에러 체크 — Hume 분석 실패 시 emotion_analysis = null
         if (payload.getError() != null) {
             log.warn("Hume 분석 실패: sourceUrl={}, error={}", sourceUrl, payload.getError());
-            sendToSqs(item, null, "");
+            sendToSqs(item, null, null, "");
             return;
         }
 
@@ -83,14 +84,18 @@ public class HumeCallbackController {
         HumeModels models = extractModels(payload);
         if (models == null) {
             log.warn("Hume 결과에 모델 데이터 없음: sourceUrl={}", sourceUrl);
-            sendToSqs(item, null, "");
+            sendToSqs(item, null, null, "");
             return;
         }
 
         EmotionAnalysis emotionAnalysis = humeResultMapper.toEmotionAnalysis(models);
+        EmotionCategoryResult emotionCategory = humeResultMapper.computeEmotionCategory(emotionAnalysis);
         String sttText = humeResultMapper.extractSttText(models);
 
-        sendToSqs(item, emotionAnalysis, sttText);
+        log.info("감정 카테고리 산출: sourceUrl={}, topEmotion={}, confidence={}bps",
+                sourceUrl, emotionCategory.getTopEmotion(), emotionCategory.getTopEmotionConfidenceBps());
+
+        sendToSqs(item, emotionAnalysis, emotionCategory, sttText);
     }
 
     private HumeModels extractModels(HumeCallbackPayload payload) {
@@ -103,7 +108,8 @@ public class HumeCallbackController {
                 .orElse(null);
     }
 
-    private void sendToSqs(DiaryBatchItem item, EmotionAnalysis emotionAnalysis, String sttText) {
+    private void sendToSqs(DiaryBatchItem item, EmotionAnalysis emotionAnalysis,
+                           EmotionCategoryResult emotionCategory, String sttText) {
         String content = (sttText != null && !sttText.isBlank()) ? sttText : "";
 
         DiaryPayload diaryPayload = DiaryPayload.ofMindDiary(
@@ -113,7 +119,8 @@ public class HumeCallbackController {
                 content,
                 item.s3Url(),
                 item.recordedAt(),
-                emotionAnalysis
+                emotionAnalysis,
+                emotionCategory
         );
 
         if (diarySqsProducer.isEmpty()) {

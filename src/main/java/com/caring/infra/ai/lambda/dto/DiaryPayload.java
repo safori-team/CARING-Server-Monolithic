@@ -1,6 +1,7 @@
 package com.caring.infra.ai.lambda.dto;
 
 import com.caring.infra.ai.hume.dto.processed.EmotionAnalysis;
+import com.caring.infra.ai.hume.dto.processed.EmotionCategoryResult;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
@@ -13,7 +14,8 @@ public record DiaryPayload(
         String content,
         @JsonProperty("s3_url") String s3Url,
         @JsonProperty("recorded_at") String recordedAt,
-        @JsonProperty("emotion_analysis") EmotionAnalysis emotionAnalysis
+        @JsonProperty("emotion_analysis") EmotionAnalysis emotionAnalysis,
+        @JsonProperty("emotion_category") EmotionCategoryResult emotionCategory
 ) {
     public static DiaryPayload ofMindDiary(
             String userId,
@@ -22,7 +24,8 @@ public record DiaryPayload(
             String content,
             String s3Url,
             String recordedAt,
-            EmotionAnalysis emotionAnalysis
+            EmotionAnalysis emotionAnalysis,
+            EmotionCategoryResult emotionCategory
     ) {
         return DiaryPayload.builder()
                 .source("mind-diary")
@@ -33,6 +36,7 @@ public record DiaryPayload(
                 .s3Url(s3Url)
                 .recordedAt(recordedAt)
                 .emotionAnalysis(emotionAnalysis)
+                .emotionCategory(emotionCategory)
                 .build();
     }
 }

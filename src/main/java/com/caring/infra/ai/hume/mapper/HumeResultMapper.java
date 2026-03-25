@@ -1,5 +1,6 @@
 package com.caring.infra.ai.hume.mapper;
 
+import com.caring.domain.emotion.entity.EmotionType;
 import com.caring.infra.ai.hume.dto.callback.*;
 import com.caring.infra.ai.hume.dto.processed.*;
 import org.springframework.stereotype.Component;
@@ -132,6 +133,57 @@ public class HumeResultMapper {
                 .sentiment(sentiment)
                 .toxicity(toxicity)
                 .utterances(utterances)
+                .build();
+    }
+
+    // === 감정 카테고리 집계 ===
+
+    /**
+     * EmotionAnalysis의 prosody + language summary를 6개 EmotionType 카테고리로 집계한다.
+     */
+    public EmotionCategoryResult computeEmotionCategory(EmotionAnalysis analysis) {
+        Map<EmotionType, Double> scoreMap = new EnumMap<>(EmotionType.class);
+        for (EmotionType type : EmotionType.values()) {
+            scoreMap.put(type, 0.0);
+        }
+
+        // prosody summary 집계
+        if (analysis.getProsody() != null && analysis.getProsody().getSummary() != null) {
+            for (EmotionScore es : analysis.getProsody().getSummary()) {
+                EmotionType type = HumeEmotionMapping.resolve(es.getName());
+                scoreMap.merge(type, es.getScore(), Double::sum);
+            }
+        }
+
+        // language summary 집계
+        if (analysis.getLanguage() != null && analysis.getLanguage().getSummary() != null) {
+            for (EmotionScore es : analysis.getLanguage().getSummary()) {
+                EmotionType type = HumeEmotionMapping.resolve(es.getName());
+                scoreMap.merge(type, es.getScore(), Double::sum);
+            }
+        }
+
+        // bps 변환 (총합 대비 비율 × 10000)
+        double totalScore = scoreMap.values().stream().mapToDouble(Double::doubleValue).sum();
+        Map<EmotionType, Integer> emotionBps = new EnumMap<>(EmotionType.class);
+        EmotionType topEmotion = EmotionType.NEUTRAL;
+        int topBps = 0;
+
+        for (Map.Entry<EmotionType, Double> entry : scoreMap.entrySet()) {
+            int bps = totalScore > 0
+                    ? (int) Math.round(entry.getValue() / totalScore * 10000)
+                    : 0;
+            emotionBps.put(entry.getKey(), bps);
+            if (bps > topBps) {
+                topBps = bps;
+                topEmotion = entry.getKey();
+            }
+        }
+
+        return EmotionCategoryResult.builder()
+                .emotionBps(emotionBps)
+                .topEmotion(topEmotion)
+                .topEmotionConfidenceBps(topBps)
                 .build();
     }
 
