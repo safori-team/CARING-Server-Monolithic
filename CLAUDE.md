@@ -1,55 +1,55 @@
 # CLAUDE.md
 
-## 프로젝트
-CARING Server - 돌봄 서비스 모놀리식 백엔드. Spring Boot 3.4.1, Java 17.
+## Project
+CARING Server - a monolithic backend for a care service. Spring Boot 3.4.1, Java 17.
 
-## 구조
+## Structure
 ```
 com.caring/
-├── api/          # 컨트롤러, UseCase, DTO (도메인별 하위 패키지)
-├── domain/       # 엔티티, 리포지토리, 도메인 서비스, 어댑터
-├── common/       # 어노테이션, 설정, 예외, 유틸
-├── security/     # SecurityConfig, JWT 필터, TokenService
-└── infra/        # 외부 연동 (AI 서버 등)
+├── api/          # Controllers, UseCases, DTOs (with sub-packages by domain)
+├── domain/       # Entities, repositories, domain services, adaptors
+├── common/       # Annotations, configuration, exceptions, utilities
+├── security/     # SecurityConfig, JWT filters, TokenService
+└── infra/        # External integrations (AI server, etc.)
 ```
 
-## 태스크 라우팅
+## Task Routing
 
-요청을 아래 태스크로 라우팅한다.
+Route requests to the tasks below.
 
 | task | spec | trigger |
 |---|---|---|
-| `branch_compare` | `agents/branch_compare.md` | 브랜치 비교, main과 차이, 머지 위험, 변경점 분석 |
-| `pr_create` | `agents/pr_create.md` | PR 생성, PR 요약, PR 작성 |
+| `branch_compare` | `agents/branch_compare.md` | branch comparison, differences from `main`, merge risk, change analysis |
+| `pr_create` | `agents/pr_create.md` | creating a PR, PR summary, PR write-up |
 
-- 브랜치 비교 + PR 생성이 같이 요청되면 `branch_compare` → `pr_create` 순서.
-- 불명확하면 사용자에게 확인.
+- If branch comparison and PR creation are requested together, run `branch_compare` first, then `pr_create`.
+- If the request is ambiguous, ask the user for clarification.
 
-## 빌드 & 실행
+## Build & Run
 ```bash
-# 빌드
+# Build
 ./gradlew build -x test
 
-# Docker 실행 (기본)
+# Run with Docker (default)
 docker compose up --build
 
-# Docker 종료
+# Stop Docker
 docker compose down
 ```
 
-## 환경 변수
-`.env` 파일 필요. 필수값:
-- `TOKEN_SECRET_USER` - JWT 시크릿 (Base64, 최소 256bit)
+## Environment Variables
+An `.env` file is required. Required value:
+- `TOKEN_SECRET_USER` - JWT secret (Base64, minimum 256 bits)
 
-선택값:
-- `FCM_KEY_BASE64` - Firebase 서비스 계정 JSON (Base64)
-- `AI_SERVICE_BASE_URL` - AI 서버 주소
+Optional values:
+- `FCM_KEY_BASE64` - Firebase service account JSON (Base64)
+- `AI_SERVICE_BASE_URL` - AI server URL
 
-DB, Redis는 compose에서 함께 띄움.
+The database and Redis are started together via Compose.
 
-## 코드 컨벤션
-- 컨트롤러: `{Domain}ApiController`
-- 유스케이스: `{Action}UseCase` (api 레이어)
-- 도메인 서비스: `{Domain}DomainService` / `{Domain}DomainServiceImpl`
-- 어댑터: `{Domain}Adaptor` / `{Domain}AdaptorImpl`
-- 커스텀 어노테이션: `@UseCase`, `@DomainService`, `@Adaptor`, `@Validator`
+## Code Conventions
+- Controller: `{Domain}ApiController`
+- Use case: `{Action}UseCase` (API layer)
+- Domain service: `{Domain}DomainService` / `{Domain}DomainServiceImpl`
+- Adaptor: `{Domain}Adaptor` / `{Domain}AdaptorImpl`
+- Custom annotations: `@UseCase`, `@DomainService`, `@Adaptor`, `@Validator`

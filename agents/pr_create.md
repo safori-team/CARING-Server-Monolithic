@@ -1,68 +1,71 @@
 # pr_create
 
-## 트리거
-- "PR 생성해줘", "PR 작성해줘", "PR 요약해줘", "PR 만들어줘"
+## Triggers
+- "Create a PR"
+- "Write a PR"
+- "Summarize this PR"
+- "Generate a PR description"
 
-## 목표
-현재 브랜치의 변경사항을 분석하여 PR 설명 마크다운 파일을 `prs/` 디렉터리에 생성한다.
+## Goal
+Analyze the changes in the current branch and create a PR description markdown file in the `prs/` directory.
 
-## 입력 규칙
-- base 기본값: `main`
-- head 기본값: `HEAD` (현재 브랜치)
-- 파일명: `prs/<branch_name>.md`
+## Input Rules
+- Default base: `main`
+- Default head: `HEAD` (current branch)
+- File name: `prs/<branch_name>.md`
 
-## 실행 순서
+## Execution Steps
 
-### 1단계: 변경사항 수집
+### Step 1: Collect Changes
 ```bash
 git log --oneline <base>...<head>
 git diff --name-status <base>...<head>
 git diff <base>...<head>
 ```
 
-### 2단계: 코드 분석
-- 변경된 주요 파일을 직접 읽어 코드 의도 파악
-- 커밋 메시지에서 변경 동기 추론
+### Step 2: Analyze the Code
+- Read the key changed files directly to understand the intent of the code
+- Infer the motivation for the changes from commit messages
 
-### 3단계: PR 마크다운 작성
-`prs/<branch_name>.md` 파일을 아래 템플릿으로 생성:
+### Step 3: Write the PR Markdown
+Create `prs/<branch_name>.md` using the template below:
 
 ```markdown
-## PR 제목
-<간결한 한 줄 제목>
+## PR Title
+<A concise one-line title>
 
-## 변경 요약
+## Change Summary
 
-### 변경 배경/동기
-<왜 이 변경이 필요했는지>
+### Background / Motivation
+<Why this change is needed>
 
-### 주요 변경 사항
-- <핵심 변경 1: 무엇을, 왜, 어떻게>
-- <핵심 변경 2>
+### Key Changes
+- <Core change 1: what, why, and how>
+- <Core change 2>
 
-### 주의할 점
-- <breaking change, 새 의존성, 설계 변경 등>
+### Notes / Cautions
+- <Breaking changes, new dependencies, design changes, etc.>
 
-### 영향 범위
-- <기존 기능에 미치는 영향>
+### Impact Scope
+- <Impact on existing functionality>
 
-## 변경 파일
-| 상태 | 파일 |
+## Changed Files
+| Status | File |
 |---|---|
 | A/M/D | path/to/file |
 
-## 커밋 목록
+## Commit List
 - <hash> <message>
 ```
 
-## 작성 규칙
-- 한국어로 작성
-- 기술적이되 읽기 쉽게
-- "변경 요약"은 파일 나열이 아닌 코드 변경의 **의도**에 집중
-- 엔티티 변경이 있으면 DDL 영향 명시
-- API 변경이 있으면 엔드포인트 변경 명시
+## Writing Rules
+- Write in English
+- Keep it technical but easy to read
+- The `Change Summary` should focus on the intent of the code changes, not just list files
+- If entity changes exist, explicitly mention DDL impact
+- If API changes exist, explicitly mention endpoint changes
 
-## 결과 형식
-1. 생성된 파일 경로 (`prs/*.md`)
-2. PR 제목 제안
-3. 주요 리뷰 포인트 1~3개
+## Output Format
+1. Generated file path (`prs/*.md`)
+2. Suggested PR title
+3. 1 to 3 key review points

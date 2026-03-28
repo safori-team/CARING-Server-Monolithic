@@ -1,39 +1,39 @@
 # AGENTS.md (Codex)
 
 ## Project
-CARING Server - 돌봄 서비스 모놀리식 백엔드. Spring Boot 3.4.1, Java 17.
+CARING Server - a monolithic backend for a care service. Spring Boot 3.4.1, Java 17.
 
-## Task routing
-Codex는 요청을 아래 태스크로 라우팅한다.
+## Task Routing
+Codex routes requests to the tasks below.
 
 | task | spec | trigger |
 |---|---|---|
-| `branch_compare` | `agents/branch_compare.md` | 브랜치 비교, main과 차이, 머지 위험, 변경점 분석 |
-| `pr_create` | `agents/pr_create.md` | PR 생성, PR 요약, PR 작성 |
+| `branch_compare` | `agents/branch_compare.md` | branch comparison, differences from `main`, merge risk, change analysis |
+| `pr_create` | `agents/pr_create.md` | creating a PR, PR summary, PR write-up |
 
-- 브랜치 비교 + PR 생성이 같이 요청되면 `branch_compare` → `pr_create` 순서.
-- 불명확하면 `branch_compare`부터 시작.
+- If branch comparison and PR creation are requested together, run `branch_compare` first, then `pr_create`.
+- If the request is ambiguous, start with `branch_compare`.
 
 ## Defaults
 - Base: `main`, Head: `HEAD`
-- 다른 로컬 브랜치 비교: `--head-ref <branch>`
+- To compare a different local branch: `--head-ref <branch>`
 
-## PR analysis flow
-1. `git diff <base>...<head>` 로 변경 파일 확인
-2. 변경된 주요 파일 직접 읽어 코드 의도 파악
-3. `prs/*.md`의 "## 변경 요약" 섹션을 한국어로 작성
+## PR Analysis Flow
+1. Check changed files with `git diff <base>...<head>`
+2. Read the key changed files directly to understand the intent of the code
+3. Write the `## Change Summary` section in `prs/*.md` in English
 
-### 변경 요약 구조
-- **변경 배경/동기**: 왜 이 변경이 필요했는지 (커밋 메시지 + 코드에서 추론)
-- **주요 변경 사항**: 핵심 변경을 bullet point로 (무엇을, 왜, 어떻게)
-- **주의할 점**: breaking change, 새 의존성, 설계 변경
-- **영향 범위**: 기존 기능에 미치는 영향
+### Change Summary Structure
+- **Background / Motivation**: Why this change is needed (inferred from commit messages and code)
+- **Key Changes**: Core changes as bullet points (what, why, and how)
+- **Notes / Cautions**: Breaking changes, new dependencies, design changes
+- **Impact Scope**: Effects on existing functionality
 
-### 작성 규칙
-- 한국어, 기술적이되 읽기 쉽게
-- 파일 목록 나열 금지 (별도 섹션에 존재)
-- 코드 변경의 "의도"에 집중
+### Writing Rules
+- Write in English, technical but easy to read
+- Do not turn the summary into a file list; that belongs in a separate section
+- Focus on the intent behind the code changes
 
 ## Output
 - `branch_compare`: commit delta, file diff, short risk notes.
-- `pr_create`: `prs/*.md` 경로, 변경 요약.
+- `pr_create`: `prs/*.md` path, change summary.
