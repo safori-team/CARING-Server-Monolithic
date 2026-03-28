@@ -18,7 +18,7 @@ import lombok.experimental.SuperBuilder;
 @Table(name = "notification",
         indexes = {
                 @Index(name = "idx_notification_voice", columnList = "voice_id"),
-                @Index(name = "idx_notification_created", columnList = "created_at")
+                @Index(name = "idx_notification_created", columnList = "created_date")
         }
 )
 public class Notification extends BaseTimeEntity {

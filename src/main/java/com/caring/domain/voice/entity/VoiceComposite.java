@@ -15,9 +15,9 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @Table(
-        name = "voice_content",
+        name = "voice_composite",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uq_vc_voice", columnNames = {"voice_id"})
+                @UniqueConstraint(name = "uq_vcp_voice", columnNames = {"voice_id"})
         }
 )
 public class VoiceComposite extends BaseTimeEntity {

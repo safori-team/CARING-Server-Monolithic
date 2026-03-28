@@ -7,8 +7,6 @@
 ```dotenv
 # --- 필수 ---
 TOKEN_SECRET_USER=<Base64 encoded, 최소 256bit>
-TOKEN_SECRET_GATEWAY=<Base64 encoded>
-TOKEN_SECRET_INTERNAL=<Base64 encoded>
 
 # --- 선택 (사용 시 필수) ---
 FCM_KEY_BASE64=<Firebase service account JSON을 Base64 인코딩>
