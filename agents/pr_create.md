@@ -59,7 +59,7 @@ Create `prs/<branch_name>.md` using the template below:
 ```
 
 ## Writing Rules
-- Write in English
+- Write in KOREAN
 - Keep it technical but easy to read
 - The `Change Summary` should focus on the intent of the code changes, not just list files
 - If entity changes exist, explicitly mention DDL impact
