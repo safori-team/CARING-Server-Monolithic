@@ -1,0 +1,7 @@
+package com.caring.domain.voice.repository;
+
+import com.caring.domain.voice.entity.VoiceContent;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface VoiceContentRepository extends JpaRepository<VoiceContent, Long> {
+}
