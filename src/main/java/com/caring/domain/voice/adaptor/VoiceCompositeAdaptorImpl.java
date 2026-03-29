@@ -20,4 +20,12 @@ public class VoiceCompositeAdaptorImpl implements VoiceCompositeAdaptor {
     public List<VoiceComposite> queryByUsernameAndDateRange(String username, LocalDateTime start, LocalDateTime end) {
         return voiceCompositeRepository.findByVoice_User_UsernameAndCreatedDateBetween(username, start, end);
     }
+
+    @Override
+    public List<VoiceComposite> queryByVoiceIds(List<Long> voiceIds) {
+        if (voiceIds.isEmpty()) {
+            return List.of();
+        }
+        return voiceCompositeRepository.findByVoice_IdIn(voiceIds);
+    }
 }
