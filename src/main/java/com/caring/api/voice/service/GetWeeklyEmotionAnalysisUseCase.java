@@ -1,5 +1,6 @@
 package com.caring.api.voice.service;
 
+import com.caring.api.emotion.service.GetWeeklyEmotionReportUseCase;
 import com.caring.common.annotation.UseCase;
 import com.caring.common.util.DateRangeUtil;
 import com.caring.api.common.dto.WeekDay;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 public class GetWeeklyEmotionAnalysisUseCase {
 
     private final VoiceCompositeAdaptor voiceCompositeAdaptor;
+    private final GetWeeklyEmotionReportUseCase getWeeklyEmotionReportUseCase;
 
     /**
      * @param month "yyyy-MM" 형식
@@ -69,8 +71,17 @@ public class GetWeeklyEmotionAnalysisUseCase {
                     .build());
         }
 
+        String reportMessage = getWeeklyEmotionReportUseCase.execute(
+                username,
+                month,
+                week,
+                weeklyEmotions,
+                composites
+        );
+
         return WeeklyAnalysisCombinedResponse.builder()
                 .weeklyEmotions(weeklyEmotions)
+                .reportMessage(reportMessage)
                 .build();
     }
 

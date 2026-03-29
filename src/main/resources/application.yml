@@ -49,6 +49,10 @@ springdoc:
 ai-service:
   base-url: ${AI_SERVICE_BASE_URL:http://localhost:8090}
 
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  model: ${OPENAI_MODEL:gpt-4o-mini}
+
 management:
   server:
     port: ${MANAGEMENT_SERVER_PORT:9082}
