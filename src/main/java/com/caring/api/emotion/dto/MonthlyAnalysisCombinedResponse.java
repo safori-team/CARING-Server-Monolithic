@@ -14,9 +14,10 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 @Builder
 @AllArgsConstructor
 @JsonInclude(NON_NULL)
-public class FrequencyAnalysisCombinedResponse {
+public class MonthlyAnalysisCombinedResponse {
 
-    private final Map<EmotionType, Long> emotionFrequency;
+    private final Map<EmotionType, Long> monthlyEmotionCounts;
     private final EmotionType topEmotion;
     private final long totalCount;
+    private final String reportMessage;
 }
