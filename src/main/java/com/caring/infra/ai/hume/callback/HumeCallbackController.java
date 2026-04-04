@@ -14,6 +14,7 @@ import com.caring.infra.ai.sqs.SqsSendException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -48,6 +49,13 @@ public class HumeCallbackController {
     /**
      * Hume Batch API 분석 완료 callback을 수신한다.
      * 각 source URL에 대해 가공 후 SQS로 전달.
+     *
+     * <p>응답 코드 정책:
+     * <ul>
+     *   <li>400 — 요청 페이로드 파싱 실패. 동일 페이로드 재시도는 무의미하므로 Hume에 ack.</li>
+     *   <li>500 — SQS 전송 실패. pendingItem이 남아 있으므로 Hume이 재시도 시 복구 가능.</li>
+     *   <li>200 — 정상 처리 또는 재시도해도 결과가 같은 오류(매핑 실패 등).</li>
+     * </ul>
      */
     @PostMapping("/callback")
     public ResponseEntity<Void> handleCallback(@RequestBody String rawBody) {
@@ -56,21 +64,32 @@ public class HumeCallbackController {
             payloads = objectMapper.readValue(rawBody, new TypeReference<>() {});
         } catch (Exception e) {
             log.error("Hume callback 파싱 실패: bodyLength={}, error={}", rawBody.length(), e.getMessage());
-            return ResponseEntity.ok().build();
+            return ResponseEntity.badRequest().build();
         }
 
         log.info("Hume callback 수신: {}건", payloads.size());
 
+        boolean sqsFailed = false;
         for (HumeCallbackPayload payload : payloads) {
             try {
                 processPayload(payload);
+            } catch (SqsSendException e) {
+                // SQS 실패 — pendingItem이 ack되지 않았으므로 500 반환해 Hume 재시도 유도
+                log.error("Hume callback SQS 전송 실패: source={}, error={}",
+                        payload.getSource() != null ? payload.getSource().getUrl() : "unknown",
+                        e.getMessage(), e);
+                sqsFailed = true;
             } catch (Exception e) {
+                // 감정 매핑 등 내부 오류 — 재시도해도 결과가 같으므로 200으로 ack
                 log.error("Hume callback 처리 실패: source={}, error={}",
                         payload.getSource() != null ? payload.getSource().getUrl() : "unknown",
                         e.getMessage(), e);
             }
         }
 
+        if (sqsFailed) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
         return ResponseEntity.ok().build();
     }
 
