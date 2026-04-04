@@ -50,6 +50,6 @@ public class GetUserVoiceListUseCase {
     private String resolveUrl(String voiceKey) {
         return s3PresignService
                 .map(svc -> svc.generateGetUrl(voiceKey))
-                .orElse(voiceKey);
+                .orElse(null);
     }
 }

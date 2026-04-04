@@ -26,7 +26,7 @@ public class GetUserVoiceDetailUseCase {
 
         String s3Url = s3PresignService
                 .map(svc -> svc.generateGetUrl(voice.getVoiceKey()))
-                .orElse(voice.getVoiceKey());
+                .orElse(null);
 
         // TODO fill out fields
         return VoiceDetailResponse.builder()
