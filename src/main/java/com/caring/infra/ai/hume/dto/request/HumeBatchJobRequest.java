@@ -1,5 +1,6 @@
 package com.caring.infra.ai.hume.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
@@ -9,6 +10,7 @@ import java.util.Map;
 
 @Getter
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class HumeBatchJobRequest {
     private List<String> urls;
     @JsonProperty("callback_url")
