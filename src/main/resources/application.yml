@@ -35,6 +35,8 @@ spring:
         secret-key: ${AWS_SECRET_KEY:}
       region:
         static: ${AWS_REGION:ap-northeast-2}
+      s3:
+        bucket: ${AWS_S3_BUCKET:}
 
 token:
   secret-user: ${TOKEN_SECRET_USER}
