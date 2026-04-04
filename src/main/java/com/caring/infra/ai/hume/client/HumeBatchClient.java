@@ -1,7 +1,11 @@
 package com.caring.infra.ai.hume.client;
 
+import com.caring.infra.ai.hume.dto.callback.HumeCallbackPayload;
 import com.caring.infra.ai.hume.dto.request.HumeBatchJobRequest;
 import com.caring.infra.ai.hume.dto.response.HumeBatchJobResponse;
+import com.caring.infra.ai.hume.dto.response.HumeJobStatusResponse;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,6 +19,7 @@ import java.util.List;
 public class HumeBatchClient {
 
     private final WebClient humeWebClient;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Hume Batch API에 분석 Job을 생성한다.
@@ -39,5 +44,41 @@ public class HumeBatchClient {
 
         log.info("Hume Batch Job 생성 완료: jobId={}, urls={}", response.getJobId(), urls.size());
         return response.getJobId();
+    }
+
+    /**
+     * Hume Job 상태를 조회한다.
+     *
+     * @return status: QUEUED | IN_PROGRESS | COMPLETED | FAILED
+     */
+    public String getJobStatus(String jobId) {
+        HumeJobStatusResponse response = humeWebClient.get()
+                .uri("/batch/jobs/{jobId}", jobId)
+                .retrieve()
+                .bodyToMono(HumeJobStatusResponse.class)
+                .block();
+
+        return response != null ? response.getStatus() : null;
+    }
+
+    /**
+     * Hume Job 분석 결과(predictions)를 조회한다.
+     * callback payload와 동일한 구조.
+     */
+    public List<HumeCallbackPayload> getJobPredictions(String jobId) {
+        String raw = humeWebClient.get()
+                .uri("/batch/jobs/{jobId}/predictions", jobId)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+        if (raw == null || raw.isBlank()) return List.of();
+
+        try {
+            return objectMapper.readValue(raw, new TypeReference<>() {});
+        } catch (Exception e) {
+            log.error("Hume predictions 파싱 실패: jobId={}, error={}", jobId, e.getMessage());
+            return List.of();
+        }
     }
 }
