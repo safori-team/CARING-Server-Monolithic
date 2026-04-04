@@ -107,9 +107,13 @@ public class HumeBatchScheduler {
                 String jobId = humeBatchClient.startJob(urls, humeCallbackUrl);
                 log.info("Hume Batch Job 생성: jobId={}, chunk={}/{}", jobId, urls.size(), batch.size());
             } catch (Exception e) {
-                log.error("Hume Batch Job 생성 실패: {}", e.getMessage(), e);
-                // 실패한 항목은 pendingItems에서 제거
-                chunk.forEach(bi -> pendingItems.remove(bi.s3Url()));
+                log.error("Hume Batch Job 생성 실패 — 다음 flush에 재시도: chunkSize={}, error={}",
+                        chunk.size(), e.getMessage(), e);
+                // pendingItems 정리 후 큐에 재적재 — 다음 flush 사이클에서 재시도
+                chunk.forEach(bi -> {
+                    pendingItems.remove(bi.s3Url());
+                    queue.offer(bi);
+                });
             }
         }
     }
