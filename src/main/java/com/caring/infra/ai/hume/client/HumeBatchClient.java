@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.Duration;
 import java.util.List;
 
 @Slf4j
@@ -18,8 +19,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class HumeBatchClient {
 
+    private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration PREDICTIONS_TIMEOUT = Duration.ofSeconds(30);
+
     private final WebClient humeWebClient;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     /**
      * Hume Batch API에 분석 Job을 생성한다.
@@ -36,7 +40,7 @@ public class HumeBatchClient {
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(HumeBatchJobResponse.class)
-                .block();
+                .block(DEFAULT_TIMEOUT);
 
         if (response == null || response.getJobId() == null) {
             throw new RuntimeException("Hume Batch Job 생성 실패: 응답이 null");
@@ -56,7 +60,7 @@ public class HumeBatchClient {
                 .uri("/batch/jobs/{jobId}", jobId)
                 .retrieve()
                 .bodyToMono(HumeJobStatusResponse.class)
-                .block();
+                .block(DEFAULT_TIMEOUT);
 
         return response != null ? response.getStatus() : null;
     }
@@ -70,7 +74,7 @@ public class HumeBatchClient {
                 .uri("/batch/jobs/{jobId}/predictions", jobId)
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();
+                .block(PREDICTIONS_TIMEOUT);
 
         if (raw == null || raw.isBlank()) return List.of();
 
