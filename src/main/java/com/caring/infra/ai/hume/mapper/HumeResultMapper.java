@@ -3,6 +3,7 @@ package com.caring.infra.ai.hume.mapper;
 import com.caring.domain.emotion.entity.EmotionType;
 import com.caring.infra.ai.hume.dto.callback.*;
 import com.caring.infra.ai.hume.dto.processed.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
  * Hume 원본 응답을 Lambda 전달 형식으로 가공한다.
  * 명세서의 "Spring 가공 규칙"을 그대로 구현.
  */
+@Slf4j
 @Component
 public class HumeResultMapper {
 
@@ -151,16 +153,22 @@ public class HumeResultMapper {
         // prosody summary 집계
         if (analysis.getProsody() != null && analysis.getProsody().getSummary() != null) {
             for (EmotionScore es : analysis.getProsody().getSummary()) {
-                EmotionType type = HumeEmotionMapping.resolve(es.getName());
-                scoreMap.merge(type, es.getScore(), Double::sum);
+                HumeEmotionMapping.tryResolve(es.getName())
+                        .ifPresentOrElse(
+                                type -> scoreMap.merge(type, es.getScore(), Double::sum),
+                                () -> log.warn("Hume prosody 미매핑 감정 건너뜀: '{}'", es.getName())
+                        );
             }
         }
 
         // language summary 집계
         if (analysis.getLanguage() != null && analysis.getLanguage().getSummary() != null) {
             for (EmotionScore es : analysis.getLanguage().getSummary()) {
-                EmotionType type = HumeEmotionMapping.resolve(es.getName());
-                scoreMap.merge(type, es.getScore(), Double::sum);
+                HumeEmotionMapping.tryResolve(es.getName())
+                        .ifPresentOrElse(
+                                type -> scoreMap.merge(type, es.getScore(), Double::sum),
+                                () -> log.warn("Hume language 미매핑 감정 건너뜀: '{}'", es.getName())
+                        );
             }
         }
 

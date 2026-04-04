@@ -5,6 +5,7 @@ import com.caring.domain.emotion.entity.EmotionType;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Hume AI 48/53개 세부 감정 → 6개 EmotionType 카테고리 매핑.
@@ -88,9 +89,11 @@ public final class HumeEmotionMapping {
     }
 
     /**
-     * Hume 감정명을 EmotionType으로 변환. 매핑에 없으면 NEUTRAL.
+     * Hume 감정명을 EmotionType으로 변환.
+     * 매핑에 없으면 empty — 호출자가 건너뛰거나 경고를 남겨야 한다.
+     * 미매핑 라벨을 NEUTRAL로 암묵 처리하면 topEmotion 집계가 왜곡될 수 있다.
      */
-    public static EmotionType resolve(String humeEmotionName) {
-        return EMOTION_MAP.getOrDefault(humeEmotionName, EmotionType.NEUTRAL);
+    public static Optional<EmotionType> tryResolve(String humeEmotionName) {
+        return Optional.ofNullable(EMOTION_MAP.get(humeEmotionName));
     }
 }
