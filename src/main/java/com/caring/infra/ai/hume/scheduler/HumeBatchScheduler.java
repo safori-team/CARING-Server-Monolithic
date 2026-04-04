@@ -46,8 +46,16 @@ public class HumeBatchScheduler {
     }
 
     /**
-     * S3 URL로 대기 중인 DiaryBatchItem 메타데이터를 조회한다.
-     * 조회 후 Map에서 제거.
+     * S3 URL로 대기 중인 DiaryBatchItem 메타데이터를 조회한다. (remove 하지 않음)
+     * 처리 완료 후 {@link #consumePendingItem(String)}으로 명시적 제거 필요.
+     */
+    public DiaryBatchItem getPendingItem(String s3Url) {
+        return pendingItems.get(s3Url);
+    }
+
+    /**
+     * S3 URL로 대기 중인 DiaryBatchItem 메타데이터를 조회 후 Map에서 제거한다.
+     * SQS 전송 성공 후에만 호출해야 한다.
      */
     public DiaryBatchItem consumePendingItem(String s3Url) {
         return pendingItems.remove(s3Url);
