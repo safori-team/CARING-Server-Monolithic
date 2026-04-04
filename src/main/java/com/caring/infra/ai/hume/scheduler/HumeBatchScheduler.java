@@ -1,7 +1,6 @@
 package com.caring.infra.ai.hume.scheduler;
 
 import com.caring.infra.ai.hume.client.HumeBatchClient;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;

@@ -3,7 +3,6 @@ package com.caring.api.voice.service;
 import com.caring.common.annotation.UseCase;
 import com.caring.common.consts.UserServiceQuestionStaticValues;
 import com.caring.common.service.S3PresignService;
-import com.caring.domain.question.entity.VoiceQuestion;
 import com.caring.domain.voice.adaptor.VoiceAdaptor;
 import com.caring.domain.voice.entity.Voice;
 import com.caring.domain.voice.repository.VoiceQuestionRepository;

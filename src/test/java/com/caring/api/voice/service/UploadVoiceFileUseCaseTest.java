@@ -3,7 +3,6 @@ package com.caring.api.voice.service;
 import com.caring.common.consts.UserServiceQuestionStaticValues;
 import com.caring.common.service.S3PresignService;
 import com.caring.domain.question.entity.QuestionCategory;
-import com.caring.domain.question.entity.VoiceQuestion;
 import com.caring.domain.user.adaptor.UserAdaptor;
 import com.caring.domain.user.entity.User;
 import com.caring.domain.voice.entity.Voice;
@@ -20,8 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
