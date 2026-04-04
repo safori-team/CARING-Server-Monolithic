@@ -17,6 +17,7 @@ import com.caring.infra.ai.hume.scheduler.DiaryBatchItem;
 import com.caring.infra.ai.lambda.dto.DiaryPayload;
 import com.caring.infra.ai.sqs.DiarySqsProducer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ import java.util.Optional;
 /**
  * 테스트/디버그용 Hume 분석 유스케이스.
  * callback 없이 polling으로 결과를 직접 수신하여 SQS까지 전송한다.
+ * polling은 별도 스레드에서 비동기 처리하므로 HTTP 커넥션을 즉시 해제한다.
  */
 @Slf4j
 @UseCase
@@ -56,10 +58,12 @@ public class PollHumeAnalyzeUseCase {
     }
 
     /**
+     * Hume job을 제출하고 jobId를 즉시 반환한다.
+     * polling 및 SQS 전송은 백그라운드에서 비동기 처리된다.
+     *
      * @return Hume jobId
-     * @throws IllegalStateException polling 타임아웃 또는 Hume 분석 실패 시
      */
-    public String execute(Long voiceId) {
+    public String submit(Long voiceId) {
         Voice voice = voiceAdaptor.queryById(voiceId);
 
         String questionText = resolveQuestion(voiceId);
@@ -73,21 +77,27 @@ public class PollHumeAnalyzeUseCase {
                 .recordedAt(voice.getCreatedDate().toString())
                 .build();
 
-        // callback URL 없이 job 제출
         String jobId = humeBatchClient.startJob(List.of(humeAccessUrl), null);
         log.info("[Poll] Hume job 제출: jobId={}, userId={}", jobId, item.userId());
 
-        // polling
+        pollAndProcess(jobId, item);
+        return jobId;
+    }
+
+    /**
+     * 별도 스레드에서 job 완료까지 polling 후 SQS 전송.
+     * HTTP 커넥션과 무관하게 백그라운드에서 실행된다.
+     */
+    @Async
+    public void pollAndProcess(String jobId, DiaryBatchItem item) {
         String status = pollUntilComplete(jobId);
         if (!"COMPLETED".equals(status)) {
-            throw new IllegalStateException("Hume 분석 실패 또는 타임아웃: jobId=" + jobId + ", status=" + status);
+            log.error("[Poll] Hume 분석 실패 또는 타임아웃: jobId={}, status={}", jobId, status);
+            return;
         }
 
-        // predictions 조회 및 처리
         List<HumeCallbackPayload> predictions = humeBatchClient.getJobPredictions(jobId);
         processAndSend(predictions, item);
-
-        return jobId;
     }
 
     private String pollUntilComplete(String jobId) {
