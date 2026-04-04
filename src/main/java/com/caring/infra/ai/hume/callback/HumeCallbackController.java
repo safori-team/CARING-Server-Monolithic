@@ -10,6 +10,8 @@ import com.caring.infra.ai.hume.scheduler.DiaryBatchItem;
 import com.caring.infra.ai.hume.scheduler.HumeBatchScheduler;
 import com.caring.infra.ai.lambda.dto.DiaryPayload;
 import com.caring.infra.ai.sqs.DiarySqsProducer;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,15 +29,18 @@ public class HumeCallbackController {
 
     private final HumeBatchScheduler humeBatchScheduler;
     private final HumeResultMapper humeResultMapper;
+    private final ObjectMapper objectMapper;
     private final Optional<DiarySqsProducer> diarySqsProducer;
 
     public HumeCallbackController(
             HumeBatchScheduler humeBatchScheduler,
             HumeResultMapper humeResultMapper,
+            ObjectMapper objectMapper,
             Optional<DiarySqsProducer> diarySqsProducer
     ) {
         this.humeBatchScheduler = humeBatchScheduler;
         this.humeResultMapper = humeResultMapper;
+        this.objectMapper = objectMapper;
         this.diarySqsProducer = diarySqsProducer;
     }
 
@@ -47,8 +52,7 @@ public class HumeCallbackController {
     public ResponseEntity<Void> handleCallback(@RequestBody String rawBody) {
         List<HumeCallbackPayload> payloads;
         try {
-            payloads = new com.fasterxml.jackson.databind.ObjectMapper()
-                    .readValue(rawBody, new com.fasterxml.jackson.core.type.TypeReference<>() {});
+            payloads = objectMapper.readValue(rawBody, new TypeReference<>() {});
         } catch (Exception e) {
             log.error("Hume callback 파싱 실패: bodyLength={}, error={}", rawBody.length(), e.getMessage());
             return ResponseEntity.ok().build();
