@@ -10,6 +10,7 @@ import com.caring.infra.ai.hume.scheduler.DiaryBatchItem;
 import com.caring.infra.ai.hume.scheduler.HumeBatchScheduler;
 import com.caring.infra.ai.lambda.dto.DiaryPayload;
 import com.caring.infra.ai.sqs.DiarySqsProducer;
+import com.caring.infra.ai.sqs.SqsSendException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;

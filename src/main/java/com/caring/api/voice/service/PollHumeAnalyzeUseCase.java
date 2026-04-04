@@ -90,14 +90,19 @@ public class PollHumeAnalyzeUseCase {
      */
     @Async
     public void pollAndProcess(String jobId, DiaryBatchItem item) {
-        String status = pollUntilComplete(jobId);
-        if (!"COMPLETED".equals(status)) {
-            log.error("[Poll] Hume 분석 실패 또는 타임아웃: jobId={}, status={}", jobId, status);
-            return;
-        }
+        try {
+            String status = pollUntilComplete(jobId);
+            if (!"COMPLETED".equals(status)) {
+                log.error("[Poll] Hume 분석 실패 또는 타임아웃: jobId={}, status={}", jobId, status);
+                return;
+            }
 
-        List<HumeCallbackPayload> predictions = humeBatchClient.getJobPredictions(jobId);
-        processAndSend(predictions, item);
+            List<HumeCallbackPayload> predictions = humeBatchClient.getJobPredictions(jobId);
+            processAndSend(predictions, item);
+        } catch (Exception e) {
+            log.error("[Poll] 처리 중 예외 발생: jobId={}, userId={}, error={}",
+                    jobId, item.userId(), e.getMessage(), e);
+        }
     }
 
     private String pollUntilComplete(String jobId) {

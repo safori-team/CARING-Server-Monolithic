@@ -23,11 +23,23 @@ public class DiarySqsProducer {
         this.queueUrl = queueUrl;
     }
 
+    /**
+     * SQS에 마음일기 메시지를 전송한다.
+     *
+     * @throws SqsSendException 전송 실패 시. 호출자는 이 예외를 처리하거나 상위로 전파해야 한다.
+     *                          {@link com.caring.infra.ai.hume.callback.HumeCallbackController}는
+     *                          이 예외가 전파되어야 pendingItems ack를 건너뛰고 재시도를 허용한다.
+     */
     public void send(DiaryPayload payload) {
-        sqsTemplate.send(to -> to
-                .queue(queueUrl)
-                .payload(payload)
-        );
-        log.info("SQS 마음일기 메시지 전송: userId={}, source={}", payload.userId(), payload.source());
+        try {
+            sqsTemplate.send(to -> to
+                    .queue(queueUrl)
+                    .payload(payload)
+            );
+            log.info("SQS 마음일기 메시지 전송: userId={}, source={}", payload.userId(), payload.source());
+        } catch (Exception e) {
+            log.error("SQS 마음일기 메시지 전송 실패: userId={}, error={}", payload.userId(), e.getMessage(), e);
+            throw new SqsSendException("SQS 전송 실패: userId=" + payload.userId(), e);
+        }
     }
 }
