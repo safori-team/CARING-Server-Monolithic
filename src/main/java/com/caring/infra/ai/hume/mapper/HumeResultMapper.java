@@ -46,6 +46,7 @@ public class HumeResultMapper {
             return "";
         }
         return models.getLanguage().getGroupedPredictions().stream()
+                .filter(group -> group != null && group.getPredictions() != null)
                 .flatMap(group -> group.getPredictions().stream())
                 .map(HumePrediction::getText)
                 .filter(Objects::nonNull)
@@ -194,6 +195,7 @@ public class HumeResultMapper {
             return List.of();
         }
         return model.getGroupedPredictions().stream()
+                .filter(group -> group != null && group.getPredictions() != null)
                 .flatMap(group -> group.getPredictions().stream())
                 .toList();
     }
