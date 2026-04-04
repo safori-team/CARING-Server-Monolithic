@@ -96,9 +96,9 @@ public class HumeCallbackController {
     private void processPayload(HumeCallbackPayload payload) {
         String sourceUrl = payload.getSource() != null ? payload.getSource().getUrl() : null;
 
-        // 메타데이터 조회 (remove 하지 않음 — 처리 성공 후 ack)
+        // 원자적 클레임 — 동시 callback이 와도 한 쪽만 non-null을 획득
         DiaryBatchItem item = sourceUrl != null
-                ? humeBatchScheduler.getPendingItem(sourceUrl)
+                ? humeBatchScheduler.claimPendingItem(sourceUrl)
                 : null;
 
         if (item == null) {
@@ -106,29 +106,36 @@ public class HumeCallbackController {
             return;
         }
 
-        // 에러 체크 — Hume 분석 실패 시 emotion_analysis = null
-        if (payload.getError() != null) {
-            log.warn("Hume 분석 실패: sourceUrl={}, error={}", sourceUrl, payload.getError());
-            sendToSqsAndAck(sourceUrl, item, null, null, "");
-            return;
+        try {
+            // 에러 체크 — Hume 분석 실패 시 emotion_analysis = null
+            if (payload.getError() != null) {
+                log.warn("Hume 분석 실패: sourceUrl={}, error={}", sourceUrl, payload.getError());
+                sendToSqs(item, null, null, "");
+                return;
+            }
+
+            // 가공
+            HumeModels models = extractModels(payload);
+            if (models == null) {
+                log.warn("Hume 결과에 모델 데이터 없음: sourceUrl={}", sourceUrl);
+                sendToSqs(item, null, null, "");
+                return;
+            }
+
+            EmotionAnalysis emotionAnalysis = humeResultMapper.toEmotionAnalysis(models);
+            EmotionCategoryResult emotionCategory = humeResultMapper.computeEmotionCategory(emotionAnalysis);
+            String sttText = humeResultMapper.extractSttText(models);
+
+            log.info("감정 카테고리 산출: sourceUrl={}, topEmotion={}, confidence={}bps",
+                    sourceUrl, emotionCategory.getTopEmotion(), emotionCategory.getTopEmotionConfidenceBps());
+
+            sendToSqs(item, emotionAnalysis, emotionCategory, sttText);
+
+        } catch (SqsSendException e) {
+            // SQS 실패 — 클레임한 item을 복원해 다음 Hume retry에서 재처리 가능하게
+            humeBatchScheduler.restorePendingItem(sourceUrl, item);
+            throw e;  // handleCallback으로 전파 → 500 반환
         }
-
-        // 가공
-        HumeModels models = extractModels(payload);
-        if (models == null) {
-            log.warn("Hume 결과에 모델 데이터 없음: sourceUrl={}", sourceUrl);
-            sendToSqsAndAck(sourceUrl, item, null, null, "");
-            return;
-        }
-
-        EmotionAnalysis emotionAnalysis = humeResultMapper.toEmotionAnalysis(models);
-        EmotionCategoryResult emotionCategory = humeResultMapper.computeEmotionCategory(emotionAnalysis);
-        String sttText = humeResultMapper.extractSttText(models);
-
-        log.info("감정 카테고리 산출: sourceUrl={}, topEmotion={}, confidence={}bps",
-                sourceUrl, emotionCategory.getTopEmotion(), emotionCategory.getTopEmotionConfidenceBps());
-
-        sendToSqsAndAck(sourceUrl, item, emotionAnalysis, emotionCategory, sttText);
     }
 
     private HumeModels extractModels(HumeCallbackPayload payload) {
@@ -141,8 +148,8 @@ public class HumeCallbackController {
                 .orElse(null);
     }
 
-    private void sendToSqsAndAck(String sourceUrl, DiaryBatchItem item, EmotionAnalysis emotionAnalysis,
-                                 EmotionCategoryResult emotionCategory, String sttText) {
+    private void sendToSqs(DiaryBatchItem item, EmotionAnalysis emotionAnalysis,
+                           EmotionCategoryResult emotionCategory, String sttText) {
         String content = (sttText != null && !sttText.isBlank()) ? sttText : "";
 
         DiaryPayload diaryPayload = DiaryPayload.ofMindDiary(
@@ -158,12 +165,10 @@ public class HumeCallbackController {
 
         if (diarySqsProducer.isEmpty()) {
             log.warn("SQS 미설정 — 마음일기 메시지 전송 건너뜀: userId={}", item.userId());
-            humeBatchScheduler.consumePendingItem(sourceUrl);
             return;
         }
+        // SqsSendException 발생 시 processPayload()의 catch에서 item을 복원
         diarySqsProducer.get().send(diaryPayload);
-        // SQS 전송 성공 후에만 pendingItems에서 제거 — 이전에 remove하면 재시도 불가
-        humeBatchScheduler.consumePendingItem(sourceUrl);
         log.info("마음일기 SQS 전송 완료: userId={}, hasEmotion={}",
                 item.userId(), emotionAnalysis != null);
     }

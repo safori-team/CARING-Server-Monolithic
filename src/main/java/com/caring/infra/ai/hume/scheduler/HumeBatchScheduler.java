@@ -46,19 +46,22 @@ public class HumeBatchScheduler {
     }
 
     /**
-     * S3 URL로 대기 중인 DiaryBatchItem 메타데이터를 조회한다. (remove 하지 않음)
-     * 처리 완료 후 {@link #consumePendingItem(String)}으로 명시적 제거 필요.
+     * S3 URL로 대기 중인 DiaryBatchItem을 원자적으로 클레임한다.
+     * ConcurrentHashMap.remove()로 단일 호출자만 item을 획득한다.
+     * 동시에 같은 callback이 두 번 들어와도 한 쪽만 non-null을 받는다.
+     *
+     * <p>SQS 전송 실패 시 {@link #restorePendingItem(String, DiaryBatchItem)}으로
+     * 되돌려야 다음 Hume retry에서 재처리된다.
      */
-    public DiaryBatchItem getPendingItem(String s3Url) {
-        return pendingItems.get(s3Url);
+    public DiaryBatchItem claimPendingItem(String s3Url) {
+        return pendingItems.remove(s3Url);
     }
 
     /**
-     * S3 URL로 대기 중인 DiaryBatchItem 메타데이터를 조회 후 Map에서 제거한다.
-     * SQS 전송 성공 후에만 호출해야 한다.
+     * SQS 전송 실패 시 클레임한 item을 복원해 다음 callback retry에서 재처리되도록 한다.
      */
-    public DiaryBatchItem consumePendingItem(String s3Url) {
-        return pendingItems.remove(s3Url);
+    public void restorePendingItem(String s3Url, DiaryBatchItem item) {
+        pendingItems.putIfAbsent(s3Url, item);
     }
 
     /**
