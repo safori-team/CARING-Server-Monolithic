@@ -45,14 +45,12 @@ public class HumeCallbackController {
      */
     @PostMapping("/callback")
     public ResponseEntity<Void> handleCallback(@RequestBody String rawBody) {
-        log.info("Hume callback raw payload: {}", rawBody);
-
         List<HumeCallbackPayload> payloads;
         try {
             payloads = new com.fasterxml.jackson.databind.ObjectMapper()
                     .readValue(rawBody, new com.fasterxml.jackson.core.type.TypeReference<>() {});
         } catch (Exception e) {
-            log.error("Hume callback 파싱 실패: {}", e.getMessage());
+            log.error("Hume callback 파싱 실패: bodyLength={}, error={}", rawBody.length(), e.getMessage());
             return ResponseEntity.ok().build();
         }
 
