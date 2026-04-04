@@ -44,7 +44,18 @@ public class HumeCallbackController {
      * 각 source URL에 대해 가공 후 SQS로 전달.
      */
     @PostMapping("/callback")
-    public ResponseEntity<Void> handleCallback(@RequestBody List<HumeCallbackPayload> payloads) {
+    public ResponseEntity<Void> handleCallback(@RequestBody String rawBody) {
+        log.info("Hume callback raw payload: {}", rawBody);
+
+        List<HumeCallbackPayload> payloads;
+        try {
+            payloads = new com.fasterxml.jackson.databind.ObjectMapper()
+                    .readValue(rawBody, new com.fasterxml.jackson.core.type.TypeReference<>() {});
+        } catch (Exception e) {
+            log.error("Hume callback 파싱 실패: {}", e.getMessage());
+            return ResponseEntity.ok().build();
+        }
+
         log.info("Hume callback 수신: {}건", payloads.size());
 
         for (HumeCallbackPayload payload : payloads) {
