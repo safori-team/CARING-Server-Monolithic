@@ -55,6 +55,24 @@ public class HumeBatchScheduler {
     }
 
     /**
+     * 테스트/즉시 분석용: 큐를 거치지 않고 단건을 즉시 Hume에 전송한다.
+     *
+     * @return Hume jobId
+     */
+    public String triggerNow(DiaryBatchItem item) {
+        String url = item.s3Url();
+        pendingItems.put(url, item);
+        try {
+            String jobId = humeBatchClient.startJob(List.of(url), humeCallbackUrl);
+            log.info("Hume 즉시 분석 요청: jobId={}, userId={}", jobId, item.userId());
+            return jobId;
+        } catch (Exception e) {
+            pendingItems.remove(url);
+            throw e;
+        }
+    }
+
+    /**
      * 1분마다 큐에 쌓인 요청을 모아 Hume Batch Job을 생성한다.
      * 100건 초과 시 여러 Job으로 분할.
      */
