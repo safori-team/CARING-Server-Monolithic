@@ -68,6 +68,7 @@ public class TriggerHumeAnalyzeUseCase {
     private String resolveHumeUrl(String voiceKey) {
         return s3PresignService
                 .map(svc -> svc.generateGetUrl(voiceKey))
-                .orElse(voiceKey);
+                .orElseThrow(() -> new IllegalStateException(
+                        "S3가 구성되지 않아 Hume 분석을 실행할 수 없습니다. AWS 설정을 확인하세요."));
     }
 }

@@ -46,11 +46,12 @@ public class UploadVoiceFileUseCase {
         String questionText = UserServiceQuestionStaticValues.QUESTION_MAP
                 .get(questionCategory.name()).get(questionIndex);
 
-        // Hume AI는 직접 접근 가능한 URL이 필요 — presigned GET URL 생성 (유효 1시간)
-        String humeAccessUrl = s3PresignService
-                .map(svc -> svc.generateGetUrl(voiceKey))
-                .orElse(voiceKey);
+        // S3 미설정 시 Hume에 접근 가능한 URL을 생성할 수 없으므로 분석 적재 건너뜀
+        if (s3PresignService.isEmpty()) {
+            return voice.getId();
+        }
 
+        String humeAccessUrl = s3PresignService.get().generateGetUrl(voiceKey);
         humeBatchScheduler.enqueue(DiaryBatchItem.builder()
                 .userId(user.getUserUuid())
                 .userName(user.getName())
