@@ -29,7 +29,7 @@ public class SecurityAccessApiController {
     }
 
     @DeleteMapping("/sign-out")
-    public ApiResponseDto<String> signOut(@UserCode String refreshToken) {
+    public ApiResponseDto<String> signOut(@RequestParam String refreshToken) {
         return ApiResponseDto.onSuccess(signOutUseCase.execute(refreshToken));
     }
 

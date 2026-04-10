@@ -1,11 +1,12 @@
 package com.caring.api.voice.dto;
 
+import com.caring.domain.emotion.entity.EmotionType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
@@ -15,9 +16,9 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 @JsonInclude(NON_NULL)
 public class VoiceDetailResponse {
     private final Long voiceId;
-    private final String title;
-    private final String topEmotion;
-    private final LocalDateTime createdAt;
-    private final String voiceContent;
+    private final LocalDate createdAt;
+    private final EmotionType topEmotion;
+    private final String questionTitle;
+    private final String content;
     private final String s3Url;
 }

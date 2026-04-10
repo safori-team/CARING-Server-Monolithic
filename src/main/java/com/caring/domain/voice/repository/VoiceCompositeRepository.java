@@ -13,4 +13,6 @@ public interface VoiceCompositeRepository extends JpaRepository<VoiceComposite, 
             LocalDateTime start,
             LocalDateTime end
     );
+
+    List<VoiceComposite> findByVoice_IdIn(List<Long> voiceIds);
 }

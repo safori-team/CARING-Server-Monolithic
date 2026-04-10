@@ -5,6 +5,7 @@ import com.caring.api.common.dto.ApiResponseDto;
 import com.caring.domain.question.entity.QuestionCategory;
 import com.caring.api.voice.service.GetUserVoiceDetailUseCase;
 import com.caring.api.voice.service.GetUserVoiceListUseCase;
+import com.caring.api.voice.service.CreateVoiceDummyDataUseCase;
 import com.caring.api.voice.service.UploadVoiceFileUseCase;
 import com.caring.api.voice.dto.VoiceDetailResponse;
 import com.caring.api.voice.dto.VoiceListResponse;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class VoiceApiController {
 
     private final UploadVoiceFileUseCase uploadVoiceFileUsecase;
+    private final CreateVoiceDummyDataUseCase createVoiceDummyDataUseCase;
     private final GetUserVoiceDetailUseCase getUserVoiceDetailUseCase;
     private final GetUserVoiceListUseCase getUserVoiceListUseCase;
 
@@ -53,5 +55,10 @@ public class VoiceApiController {
                                                         @RequestParam String bucketUrl) {
         return ApiResponseDto.onSuccess(
                 uploadVoiceFileUsecase.execute(username, questionCategory, questionIndex, bucketUrl));
+    }
+
+    @PostMapping("/test-dummy")
+    public ApiResponseDto<java.util.List<Long>> createVoiceDummyData(@UserCode String username) {
+        return ApiResponseDto.onSuccess(createVoiceDummyDataUseCase.execute(username));
     }
 }
