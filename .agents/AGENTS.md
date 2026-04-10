@@ -1,39 +1,22 @@
 # AGENTS.md (Codex)
 
 ## Project
-CARING Server - a monolithic backend for a care service. Spring Boot 3.4.1, Java 17.
+CARING Server is a Spring Boot 3.4.1 / Java 17 monolithic backend.
 
 ## Task Routing
-Codex routes requests to the tasks below.
+Use the skill specs below.
 
 | task | spec | trigger |
 |---|---|---|
-| `branch_compare` | `agents/branch_compare.md` | branch comparison, differences from `main`, merge risk, change analysis |
-| `pr_create` | `agents/pr_create.md` | creating a PR, PR summary, PR write-up |
+| `branch_compare` | `.agents/skills/branch-compare/SKILL.md` | branch comparison, changes from `main`, merge risk, quick diff analysis |
+| `pr_create` | `.agents/skills/pr-create/SKILL.md` | PR markdown creation, PR summary, PR write-up |
 
-- If branch comparison and PR creation are requested together, run `branch_compare` first, then `pr_create`.
-- If the request is ambiguous, start with `branch_compare`.
+- If the user asks for both comparison and PR writing, do `branch_compare` first, then `pr_create`.
+- Default comparison range is `main...HEAD`.
 
-## Defaults
-- Base: `main`, Head: `HEAD`
-- To compare a different local branch: `--head-ref <branch>`
-
-## PR Analysis Flow
-1. Check changed files with `git diff <base>...<head>`
-2. Read the key changed files directly to understand the intent of the code
-3. Write the `## Change Summary` section in `prs/*.md` in English
-
-### Change Summary Structure
-- **Background / Motivation**: Why this change is needed (inferred from commit messages and code)
-- **Key Changes**: Core changes as bullet points (what, why, and how)
-- **Notes / Cautions**: Breaking changes, new dependencies, design changes
-- **Impact Scope**: Effects on existing functionality
-
-### Writing Rules
-- Write in English, technical but easy to read
-- Do not turn the summary into a file list; that belongs in a separate section
-- Focus on the intent behind the code changes
-
-## Output
-- `branch_compare`: commit delta, file diff, short risk notes.
-- `pr_create`: `prs/*.md` path, change summary.
+## PR Writing Principles
+- Always write PR summaries in Korean unless the user explicitly asks for English.
+- Prefer short sections and flat bullets over long paragraphs.
+- If many files changed, list only representative files in `변경 파일` and summarize the rest.
+- `주요 변경 사항` and `주의할 점` should be scannable in a few bullets, not dense prose.
+- Focus on intent, behavior change, deployment impact, and review risk.
