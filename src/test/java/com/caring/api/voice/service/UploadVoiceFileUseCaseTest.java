@@ -69,15 +69,13 @@ class UploadVoiceFileUseCaseTest {
     }
 
     @Test
-    @DisplayName("S3 미설정 시 - voiceKey를 그대로 Hume URL로 사용")
-    void execute_withoutS3_usesVoiceKeyAsUrl() {
+    @DisplayName("S3 미설정 시 - Hume enqueue 건너뜀")
+    void execute_withoutS3_skipsHumeEnqueue() {
         // given
         String username = "testUser";
         String voiceKey = "voices/testUser/uuid.m4a";
 
         given(userAdaptor.queryUserByUsername(username)).willReturn(user);
-        given(user.getUserUuid()).willReturn("user-uuid-123");
-        given(user.getName()).willReturn("홍길동");
         given(voiceDomainService.uploadVoiceFile(user, voiceKey)).willReturn(voice);
         given(voice.getId()).willReturn(1L);
 
@@ -85,11 +83,10 @@ class UploadVoiceFileUseCaseTest {
                 userAdaptor, voiceDomainService, humeBatchScheduler, Optional.empty());
 
         // when
-        useCase.execute(username, QuestionCategory.EMOTION, 0, voiceKey, "2026-04-04T00:00:00");
+        Long voiceId = useCase.execute(username, QuestionCategory.EMOTION, 0, voiceKey, "2026-04-04T00:00:00");
 
         // then
-        ArgumentCaptor<DiaryBatchItem> captor = ArgumentCaptor.forClass(DiaryBatchItem.class);
-        verify(humeBatchScheduler).enqueue(captor.capture());
-        assertThat(captor.getValue().s3Url()).isEqualTo(voiceKey);
+        assertThat(voiceId).isEqualTo(1L);
+        org.mockito.Mockito.verify(humeBatchScheduler, org.mockito.Mockito.never()).enqueue(org.mockito.ArgumentMatchers.any());
     }
 }
