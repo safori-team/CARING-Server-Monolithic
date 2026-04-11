@@ -105,8 +105,8 @@ class TriggerHumeAnalyzeUseCaseTest {
     }
 
     @Test
-    @DisplayName("S3 미설정 시 - voiceKey를 그대로 Hume URL로 사용")
-    void execute_withoutS3_usesVoiceKeyDirectly() {
+    @DisplayName("S3 미설정 시 - IllegalStateException 발생")
+    void execute_withoutS3_throwsIllegalStateException() {
         // given
         Long voiceId = 1L;
         String voiceKey = "voices/user1/uuid.m4a";
@@ -118,17 +118,12 @@ class TriggerHumeAnalyzeUseCaseTest {
         given(user.getUserUuid()).willReturn("uuid");
         given(user.getName()).willReturn("홍길동");
         given(voiceQuestionRepository.findByVoice_Id(voiceId)).willReturn(Optional.empty());
-        given(humeBatchScheduler.triggerNow(any())).willReturn("job-id");
 
         TriggerHumeAnalyzeUseCase useCase = new TriggerHumeAnalyzeUseCase(
                 voiceAdaptor, voiceQuestionRepository, humeBatchScheduler, Optional.empty());
 
-        // when
-        useCase.execute(voiceId);
-
-        // then
-        ArgumentCaptor<DiaryBatchItem> captor = ArgumentCaptor.forClass(DiaryBatchItem.class);
-        verify(humeBatchScheduler).triggerNow(captor.capture());
-        assertThat(captor.getValue().s3Url()).isEqualTo(voiceKey);
+        // when & then
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> useCase.execute(voiceId))
+                .isInstanceOf(IllegalStateException.class);
     }
 }
