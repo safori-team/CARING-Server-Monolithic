@@ -16,4 +16,5 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 public class WeeklyAnalysisCombinedResponse {
 
     private final List<WeekDayEmotion> weeklyEmotions;
+    private final String reportMessage;
 }

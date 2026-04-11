@@ -2,9 +2,9 @@ package com.caring.api.emotion.controller;
 
 import com.caring.common.annotation.UserCode;
 import com.caring.api.common.dto.ApiResponseDto;
-import com.caring.api.emotion.dto.FrequencyAnalysisCombinedResponse;
+import com.caring.api.emotion.dto.MonthlyAnalysisCombinedResponse;
 import com.caring.api.emotion.dto.WeeklyAnalysisCombinedResponse;
-import com.caring.api.voice.service.GetEmotionFrequencyUseCase;
+import com.caring.api.voice.service.GetMonthlyEmotionAnalysisUseCase;
 import com.caring.api.voice.service.GetWeeklyEmotionAnalysisUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,13 +17,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/api/users/voices/analyzing")
 public class EmotionAnalysisApiController {
 
-    private final GetEmotionFrequencyUseCase getEmotionFrequencyUseCase;
+    private final GetMonthlyEmotionAnalysisUseCase getMonthlyEmotionAnalysisUseCase;
     private final GetWeeklyEmotionAnalysisUseCase getWeeklyEmotionAnalysisUseCase;
 
-    @GetMapping("/frequency")
-    public ApiResponseDto<FrequencyAnalysisCombinedResponse> getCareEmotionFrequency(@UserCode String username,
-                                                                                     @RequestParam String month) {
-        return ApiResponseDto.onSuccess(getEmotionFrequencyUseCase.execute(username, month));
+    @GetMapping("/monthly")
+    public ApiResponseDto<MonthlyAnalysisCombinedResponse> getCareEmotionMonthly(@UserCode String username,
+                                                                                 @RequestParam String month) {
+        return ApiResponseDto.onSuccess(getMonthlyEmotionAnalysisUseCase.execute(username, month));
     }
 
     @GetMapping("/weekly")
