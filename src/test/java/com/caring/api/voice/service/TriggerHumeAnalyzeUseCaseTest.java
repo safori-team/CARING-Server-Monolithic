@@ -113,10 +113,6 @@ class TriggerHumeAnalyzeUseCaseTest {
 
         given(voiceAdaptor.queryById(voiceId)).willReturn(voice);
         given(voice.getVoiceKey()).willReturn(voiceKey);
-        given(voice.getCreatedDate()).willReturn(LocalDateTime.now());
-        given(voice.getUser()).willReturn(user);
-        given(user.getUserUuid()).willReturn("uuid");
-        given(user.getName()).willReturn("홍길동");
         given(voiceQuestionRepository.findByVoice_Id(voiceId)).willReturn(Optional.empty());
 
         TriggerHumeAnalyzeUseCase useCase = new TriggerHumeAnalyzeUseCase(

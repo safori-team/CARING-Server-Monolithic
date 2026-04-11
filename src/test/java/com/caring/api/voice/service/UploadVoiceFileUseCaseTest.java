@@ -76,8 +76,6 @@ class UploadVoiceFileUseCaseTest {
         String voiceKey = "voices/testUser/uuid.m4a";
 
         given(userAdaptor.queryUserByUsername(username)).willReturn(user);
-        given(user.getUserUuid()).willReturn("user-uuid-123");
-        given(user.getName()).willReturn("홍길동");
         given(voiceDomainService.uploadVoiceFile(user, voiceKey)).willReturn(voice);
         given(voice.getId()).willReturn(1L);
 
