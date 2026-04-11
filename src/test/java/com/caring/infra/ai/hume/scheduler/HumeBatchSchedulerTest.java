@@ -53,7 +53,7 @@ class HumeBatchSchedulerTest {
 
         // then
         assertThat(result).isEqualTo(jobId);
-        assertThat(scheduler.consumePendingItem(item.s3Url())).isNotNull(); // 콜백 수신 전까지 pendingItems에 존재해야 함
+        assertThat(scheduler.claimPendingItem(item.s3Url())).isNotNull(); // 콜백 수신 전까지 pendingItems에 존재해야 함
     }
 
     @Test
@@ -74,7 +74,7 @@ class HumeBatchSchedulerTest {
         scheduler.triggerNow(item);
 
         // then - 콜백 시 consumePendingItem으로 조회 가능
-        DiaryBatchItem found = scheduler.consumePendingItem(item.s3Url());
+        DiaryBatchItem found = scheduler.claimPendingItem(item.s3Url());
         assertThat(found).isNotNull();
         assertThat(found.userId()).isEqualTo("user-uuid");
     }
@@ -98,7 +98,7 @@ class HumeBatchSchedulerTest {
                 .isInstanceOf(RuntimeException.class);
 
         // pendingItems에서 제거되어야 함
-        assertThat(scheduler.consumePendingItem(item.s3Url())).isNull();
+        assertThat(scheduler.claimPendingItem(item.s3Url())).isNull();
     }
 
     @Test
