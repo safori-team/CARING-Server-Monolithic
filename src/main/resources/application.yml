@@ -28,6 +28,16 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY:}
+        secret-key: ${AWS_SECRET_KEY:}
+      region:
+        static: ${AWS_REGION:ap-northeast-2}
+      s3:
+        bucket: ${AWS_S3_BUCKET:}
+
 token:
   secret-user: ${TOKEN_SECRET_USER}
 
@@ -48,6 +58,14 @@ springdoc:
 
 ai-service:
   base-url: ${AI_SERVICE_BASE_URL:http://localhost:8090}
+
+hume:
+  api-key: ${HUME_API_KEY:}
+  base-url: ${HUME_BASE_URL:https://api.hume.ai/v0}
+  callback-url: ${HUME_CALLBACK_URL:http://localhost:8080/v1/api/hume/callback}
+
+sqs:
+  diary-to-chatbot-url: ${DIARY_TO_CHATBOT_SQS_URL:}
 
 openai:
   api-key: ${OPENAI_API_KEY:}

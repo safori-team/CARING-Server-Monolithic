@@ -50,7 +50,8 @@ public class SecurityConfig {
                 new AntPathRequestMatcher("/welcome"),
                 new AntPathRequestMatcher("/v1/api/access/**"),
                 new AntPathRequestMatcher("/v1/api/auth/**"),
-                new AntPathRequestMatcher("/v1/api/users/sign-up")
+                new AntPathRequestMatcher("/v1/api/users/sign-up"),
+                new AntPathRequestMatcher("/v1/api/hume/callback")
         ).toArray(RequestMatcher[]::new);
     }
 

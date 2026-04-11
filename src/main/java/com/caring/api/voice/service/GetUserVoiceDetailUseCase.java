@@ -2,6 +2,7 @@ package com.caring.api.voice.service;
 
 import com.caring.common.annotation.UseCase;
 import com.caring.common.consts.UserServiceQuestionStaticValues;
+import com.caring.common.service.S3PresignService;
 import com.caring.domain.voice.adaptor.VoiceAdaptor;
 import com.caring.domain.voice.adaptor.VoiceCompositeAdaptor;
 import com.caring.domain.voice.entity.Voice;
@@ -12,21 +13,34 @@ import com.caring.domain.question.entity.VoiceQuestion;
 import com.caring.domain.voice.repository.VoiceContentRepository;
 import com.caring.domain.voice.repository.VoiceQuestionRepository;
 import com.caring.api.voice.dto.VoiceDetailResponse;
-import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Optional;
 
 @UseCase
-@RequiredArgsConstructor
 public class GetUserVoiceDetailUseCase {
+
     private final VoiceAdaptor voiceAdaptor;
     private final VoiceCompositeAdaptor voiceCompositeAdaptor;
     private final VoiceQuestionRepository voiceQuestionRepository;
     private final VoiceContentRepository voiceContentRepository;
+    private final Optional<S3PresignService> s3PresignService;
+
+    public GetUserVoiceDetailUseCase(VoiceAdaptor voiceAdaptor,
+                                     VoiceCompositeAdaptor voiceCompositeAdaptor,
+                                     VoiceQuestionRepository voiceQuestionRepository,
+                                     VoiceContentRepository voiceContentRepository,
+                                     Optional<S3PresignService> s3PresignService) {
+        this.voiceAdaptor = voiceAdaptor;
+        this.voiceCompositeAdaptor = voiceCompositeAdaptor;
+        this.voiceQuestionRepository = voiceQuestionRepository;
+        this.voiceContentRepository = voiceContentRepository;
+        this.s3PresignService = s3PresignService;
+    }
 
     public VoiceDetailResponse execute(Long voiceId, String username) {
         Voice voice = voiceAdaptor.queryById(voiceId);
-        if(!voice.getUser().getUsername().equals(username))throw VoiceHandler.NO_PERMISSION;
+        if (!voice.getUser().getUsername().equals(username)) throw VoiceHandler.NO_PERMISSION;
 
         VoiceComposite composite = voiceCompositeAdaptor.queryByVoiceIds(List.of(voiceId)).stream()
                 .findFirst()
@@ -40,7 +54,7 @@ public class GetUserVoiceDetailUseCase {
                 .topEmotion(composite != null ? composite.getTopEmotion() : null)
                 .questionTitle(resolveQuestionTitle(voiceQuestion))
                 .content(voiceContent != null ? voiceContent.getContent() : null)
-                .s3Url(voice.getVoiceKey())
+                .s3Url(s3PresignService.map(svc -> svc.generateGetUrl(voice.getVoiceKey())).orElse(null))
                 .build();
     }
 

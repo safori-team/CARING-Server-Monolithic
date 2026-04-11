@@ -61,6 +61,13 @@ dependencies {
     implementation 'com.google.firebase:firebase-admin:9.6.0'
     implementation 'com.google.guava:guava:32.1.2-jre'
 
+    // Spring Cloud AWS SQS
+    implementation platform('io.awspring.cloud:spring-cloud-aws-dependencies:3.3.0')
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
+
+    // AWS SDK S3 (Presigned URL)
+    implementation 'software.amazon.awssdk:s3'
+
     // Prometheus
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 

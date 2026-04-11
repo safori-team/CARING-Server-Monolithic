@@ -22,7 +22,13 @@ public class FcmConfig {
 
     @Bean
     public FirebaseApp firebaseApp() throws IOException {
-        byte[] decodedBytes = Base64.getDecoder().decode(env.getProperty("fcm.key.base64"));
+        String base64Key = env.getProperty("fcm.key.base64", "");
+        if (base64Key.isBlank()) {
+            log.warn("FCM_KEY_BASE64 미설정 — Firebase 초기화 건너뜀");
+            return null;
+        }
+
+        byte[] decodedBytes = Base64.getDecoder().decode(base64Key);
         ByteArrayInputStream serviceAccount = new ByteArrayInputStream(decodedBytes);
 
         FirebaseOptions options = FirebaseOptions.builder()
