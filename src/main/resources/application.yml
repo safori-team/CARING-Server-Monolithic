@@ -45,10 +45,6 @@ fcm:
   key:
     base64: ${FCM_KEY_BASE64:}
 
-openapi:
-  service:
-    url: ${OPENAPI_SERVICE_URL:http://localhost:8080}
-
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
