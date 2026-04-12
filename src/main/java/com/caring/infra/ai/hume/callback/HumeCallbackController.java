@@ -1,5 +1,6 @@
 package com.caring.infra.ai.hume.callback;
 
+import com.caring.infra.ai.hume.dto.callback.HumeCallbackEnvelope;
 import com.caring.infra.ai.hume.dto.callback.HumeCallbackPayload;
 import com.caring.infra.ai.hume.dto.callback.HumeInferencePrediction;
 import com.caring.infra.ai.hume.dto.callback.HumeModels;
@@ -11,7 +12,6 @@ import com.caring.infra.ai.hume.scheduler.HumeBatchScheduler;
 import com.caring.infra.ai.lambda.dto.DiaryPayload;
 import com.caring.infra.ai.sqs.DiarySqsProducer;
 import com.caring.infra.ai.sqs.SqsSendException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -59,10 +59,10 @@ public class HumeCallbackController {
      */
     @PostMapping("/callback")
     public ResponseEntity<Void> handleCallback(@RequestBody String rawBody) {
-        log.info("Hume callback raw (first 500): {}", rawBody.substring(0, Math.min(500, rawBody.length())));
         List<HumeCallbackPayload> payloads;
         try {
-            payloads = objectMapper.readValue(rawBody, new TypeReference<>() {});
+            HumeCallbackEnvelope envelope = objectMapper.readValue(rawBody, HumeCallbackEnvelope.class);
+            payloads = envelope.getPredictions();
         } catch (Exception e) {
             log.error("Hume callback 파싱 실패: bodyLength={}, error={}", rawBody.length(), e.getMessage());
             return ResponseEntity.badRequest().build();
