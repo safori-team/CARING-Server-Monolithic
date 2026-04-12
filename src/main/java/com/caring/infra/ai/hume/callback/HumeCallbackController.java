@@ -59,6 +59,7 @@ public class HumeCallbackController {
      */
     @PostMapping("/callback")
     public ResponseEntity<Void> handleCallback(@RequestBody String rawBody) {
+        log.info("Hume callback raw (first 500): {}", rawBody.substring(0, Math.min(500, rawBody.length())));
         List<HumeCallbackPayload> payloads;
         try {
             payloads = objectMapper.readValue(rawBody, new TypeReference<>() {});
