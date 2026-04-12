@@ -6,20 +6,14 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
-import io.swagger.v3.oas.models.servers.Server;
-import org.springframework.core.env.Environment;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@RequiredArgsConstructor
 @Configuration
 @OpenAPIDefinition(
         info = @Info(title = "API Document", description = "USER SERVICE 명세서", version = "v3")
 )
 public class SwaggerConfig {
-
-    private final Environment env;
 
     @Bean
     public OpenAPI openAPI() {
@@ -35,9 +29,7 @@ public class SwaggerConfig {
                         .in(SecurityScheme.In.HEADER)
                         .bearerFormat("Authorization"));
 
-
         return new OpenAPI()
-                .addServersItem(new Server().url(env.getProperty("openapi.service.url")))
                 .addSecurityItem(securityRequirement)
                 .components(components);
     }
