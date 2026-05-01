@@ -12,8 +12,6 @@ import com.google.genai.types.FileData;
 import com.google.genai.types.GenerateContentConfig;
 import com.google.genai.types.GenerateContentResponse;
 import com.google.genai.types.Part;
-import com.google.genai.types.Schema;
-import com.google.genai.types.Type;
 import com.google.genai.types.UploadFileConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +25,6 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -98,9 +95,18 @@ public class GeminiVoiceAnalyzer {
             GeminiAnalysisResult result = objectMapper.readValue(analysisJson, GeminiAnalysisResult.class);
             VoiceComposite composite = emotionMapper.toVoiceComposite(result, voice);
             voiceCompositeAdaptor.save(composite);
+            voice.markAnalysisCompleted();
+            voiceAdaptor.save(voice);
             log.info("Gemini analysis saved for voiceId={}, topEmotion={}", voiceId, composite.getTopEmotion());
         } catch (Exception e) {
             log.error("Gemini analysis failed for voiceId={}, voiceKey={}", voiceId, voiceKey, e);
+            try {
+                Voice voice = voiceAdaptor.queryById(voiceId);
+                voice.markAnalysisFailed();
+                voiceAdaptor.save(voice);
+            } catch (Exception ex) {
+                log.error("Failed to update analysisStatus to FAILED for voiceId={}", voiceId, ex);
+            }
         }
     }
 
@@ -127,39 +133,8 @@ public class GeminiVoiceAnalyzer {
                     UploadFileConfig.builder().mimeType(mimeType).build()
             );
 
-            Schema emotionSchema = Schema.builder()
-                    .type(Type.Known.OBJECT)
-                    .properties(Map.of(
-                            "label",     Schema.builder().type(Type.Known.STRING).build(),
-                            "category",  Schema.builder().type(Type.Known.STRING).build(),
-                            "intensity", Schema.builder().type(Type.Known.NUMBER).build()
-                    ))
-                    .required(List.of("label", "category", "intensity"))
-                    .build();
+            log.debug("Gemini file uploaded: uri={}", uploaded.uri().orElse("(no uri)"));
 
-            Schema segmentSchema = Schema.builder()
-                    .type(Type.Known.OBJECT)
-                    .properties(Map.of(
-                            "timestamp",     Schema.builder().type(Type.Known.STRING).build(),
-                            "text",          Schema.builder().type(Type.Known.STRING).build(),
-                            "emotions",      Schema.builder().type(Type.Known.ARRAY).items(emotionSchema).build(),
-                            "prosody_notes", Schema.builder().type(Type.Known.STRING).build()
-                    ))
-                    .required(List.of("timestamp", "text", "emotions", "prosody_notes"))
-                    .build();
-
-            Schema responseSchema = Schema.builder()
-                    .type(Type.Known.OBJECT)
-                    .properties(Map.of(
-                            "transcript",      Schema.builder().type(Type.Known.STRING).build(),
-                            "summary",         Schema.builder().type(Type.Known.STRING).build(),
-                            "segments",        Schema.builder().type(Type.Known.ARRAY).items(segmentSchema).build(),
-                            "stability_score", Schema.builder().type(Type.Known.NUMBER).build()
-                    ))
-                    .required(List.of("transcript", "summary", "segments", "stability_score"))
-                    .build();
-
-            float temperature = 0.2f;
             GenerateContentResponse response = client.models.generateContent(
                     modelName,
                     Content.builder()
@@ -176,8 +151,6 @@ public class GeminiVoiceAnalyzer {
                             .build(),
                     GenerateContentConfig.builder()
                             .responseMimeType("application/json")
-                            .responseSchema(responseSchema)
-                            .temperature(temperature)
                             .build()
             );
 
