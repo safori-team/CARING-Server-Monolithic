@@ -1,41 +1,31 @@
 package com.caring.api.voice.service;
 
 import com.caring.common.annotation.UseCase;
-import com.caring.common.consts.UserServiceQuestionStaticValues;
-import com.caring.common.service.S3PresignService;
 import com.caring.domain.question.entity.QuestionCategory;
 import com.caring.domain.question.exception.QuestionHandler;
 import com.caring.domain.user.adaptor.UserAdaptor;
 import com.caring.domain.user.entity.User;
-import com.caring.domain.voice.service.VoiceDomainService;
 import com.caring.domain.voice.entity.Voice;
-import com.caring.infra.ai.hume.scheduler.DiaryBatchItem;
-import com.caring.infra.ai.hume.scheduler.HumeBatchScheduler;
+import com.caring.domain.voice.service.VoiceDomainService;
+import com.caring.infra.ai.gemini.GeminiVoiceAnalyzer;
 
 import java.util.List;
-import java.util.Optional;
 
 @UseCase
 public class UploadVoiceFileUseCase {
 
     private final UserAdaptor userAdaptor;
     private final VoiceDomainService voiceDomainService;
-    private final HumeBatchScheduler humeBatchScheduler;
-    private final Optional<S3PresignService> s3PresignService;
+    private final GeminiVoiceAnalyzer geminiVoiceAnalyzer;
 
     public UploadVoiceFileUseCase(UserAdaptor userAdaptor,
                                   VoiceDomainService voiceDomainService,
-                                  HumeBatchScheduler humeBatchScheduler,
-                                  Optional<S3PresignService> s3PresignService) {
+                                  GeminiVoiceAnalyzer geminiVoiceAnalyzer) {
         this.userAdaptor = userAdaptor;
         this.voiceDomainService = voiceDomainService;
-        this.humeBatchScheduler = humeBatchScheduler;
-        this.s3PresignService = s3PresignService;
+        this.geminiVoiceAnalyzer = geminiVoiceAnalyzer;
     }
 
-    /**
-     * @param voiceKey S3 오브젝트 키 (예: voices/user1/uuid.m4a)
-     */
     public Long execute(String username, QuestionCategory questionCategory, int questionIndex,
                         String voiceKey, String recordedAt) {
         validateQuestion(questionCategory, questionIndex);
@@ -43,22 +33,7 @@ public class UploadVoiceFileUseCase {
         Voice voice = voiceDomainService.uploadVoiceFile(user, voiceKey);
         voiceDomainService.linkVoiceQuestion(voice, questionCategory, questionIndex);
 
-        String questionText = UserServiceQuestionStaticValues.QUESTION_MAP
-                .get(questionCategory.name()).get(questionIndex);
-
-        // S3 미설정 시 Hume에 접근 가능한 URL을 생성할 수 없으므로 분석 적재 건너뜀
-        if (s3PresignService.isEmpty()) {
-            return voice.getId();
-        }
-
-        String humeAccessUrl = s3PresignService.get().generateGetUrl(voiceKey);
-        humeBatchScheduler.enqueue(DiaryBatchItem.builder()
-                .userId(user.getUserUuid())
-                .userName(user.getName())
-                .question(questionText)
-                .s3Url(humeAccessUrl)
-                .recordedAt(recordedAt)
-                .build());
+        geminiVoiceAnalyzer.analyzeAsync(voice.getId(), voiceKey);
 
         return voice.getId();
     }
@@ -67,7 +42,7 @@ public class UploadVoiceFileUseCase {
         if (questionCategory == null) {
             throw QuestionHandler.NOT_FOUND;
         }
-        List<String> questions = UserServiceQuestionStaticValues.QUESTION_MAP.get(questionCategory.name());
+        List<String> questions = com.caring.common.consts.UserServiceQuestionStaticValues.QUESTION_MAP.get(questionCategory.name());
         if (questions == null || questionIndex < 0 || questionIndex >= questions.size()) {
             throw QuestionHandler.NOT_FOUND;
         }

@@ -10,22 +10,29 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Adaptor
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class VoiceCompositeAdaptorImpl implements VoiceCompositeAdaptor {
 
     private final VoiceCompositeRepository voiceCompositeRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<VoiceComposite> queryByUsernameAndDateRange(String username, LocalDateTime start, LocalDateTime end) {
         return voiceCompositeRepository.findByVoice_User_UsernameAndCreatedDateBetween(username, start, end);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<VoiceComposite> queryByVoiceIds(List<Long> voiceIds) {
         if (voiceIds.isEmpty()) {
             return List.of();
         }
         return voiceCompositeRepository.findByVoice_IdIn(voiceIds);
+    }
+
+    @Override
+    @Transactional
+    public VoiceComposite save(VoiceComposite voiceComposite) {
+        return voiceCompositeRepository.save(voiceComposite);
     }
 }
