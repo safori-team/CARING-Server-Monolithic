@@ -7,7 +7,7 @@ COPY gradle gradle
 RUN chmod +x gradlew && sed -i 's/\r$//' gradlew
 
 COPY src src
-RUN ./gradlew bootJar -x test
+RUN ./gradlew clean bootJar -x test --no-build-cache
 
 FROM eclipse-temurin:17-jre-jammy
 

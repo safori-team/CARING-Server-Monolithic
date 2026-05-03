@@ -3,11 +3,15 @@ package com.caring.infra.ai.gemini;
 import com.caring.domain.emotion.entity.EmotionType;
 import com.caring.domain.voice.entity.Voice;
 import com.caring.domain.voice.entity.VoiceComposite;
+import com.caring.domain.voice.entity.VoiceEmotionLabel;
 import com.caring.infra.ai.gemini.dto.GeminiAnalysisResult;
 import com.caring.infra.ai.gemini.dto.GeminiEmotionScore;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -52,11 +56,50 @@ public class GeminiEmotionMapper {
                 .build();
     }
 
+    /**
+     * Gemini 분석 결과에서 세부 감정 레이블을 voice 단위로 집계하여 반환.
+     * 동일 label이 여러 세그먼트에 걸쳐 있으면 intensity를 합산.
+     */
+    public List<VoiceEmotionLabel> toEmotionLabels(GeminiAnalysisResult result, Voice voice) {
+        // label → [category, intensitySum]
+        Map<String, String> labelCategory = new LinkedHashMap<>();
+        Map<String, Double> labelIntensity = new LinkedHashMap<>();
+
+        if (result.segments() != null) {
+            for (var segment : result.segments()) {
+                if (segment.emotions() == null || segment.category() == null) continue;
+                String category = segment.category();
+                for (GeminiEmotionScore score : segment.emotions()) {
+                    if (score == null || score.name() == null) continue;
+                    labelCategory.putIfAbsent(score.name(), category);
+                    labelIntensity.merge(score.name(), score.intensity(), Double::sum);
+                }
+            }
+        }
+
+        List<VoiceEmotionLabel> labels = new ArrayList<>();
+        for (Map.Entry<String, Double> entry : labelIntensity.entrySet()) {
+            String label = entry.getKey();
+            int intensityX1000 = (int) Math.round(entry.getValue() * 1000);
+            labels.add(VoiceEmotionLabel.builder()
+                    .voice(voice)
+                    .category(labelCategory.get(label))
+                    .label(label)
+                    .intensityX1000(intensityX1000)
+                    .build());
+        }
+        return labels;
+    }
+
     private Map<EmotionType, Double> aggregateIntensity(GeminiAnalysisResult result) {
         Map<EmotionType, Double> sum = new EnumMap<>(EmotionType.class);
+        if (result.segments() == null) return sum;
         for (var segment : result.segments()) {
+            if (segment.emotions() == null || segment.category() == null) continue;
+            String category = segment.category();
             for (GeminiEmotionScore score : segment.emotions()) {
-                GeminiEmotionMapping.resolve(score.label(), score.category())
+                if (score == null || score.name() == null) continue;
+                GeminiEmotionMapping.resolve(score.name(), category)
                         .ifPresent(type -> sum.merge(type, score.intensity(), Double::sum));
             }
         }
@@ -67,9 +110,7 @@ public class GeminiEmotionMapper {
         double total = intensitySum.values().stream().mapToDouble(Double::doubleValue).sum();
         if (total <= 0) {
             Map<EmotionType, Integer> fallback = new EnumMap<>(EmotionType.class);
-            for (EmotionType t : EmotionType.values()) {
-                fallback.put(t, 0);
-            }
+            for (EmotionType t : EmotionType.values()) fallback.put(t, 0);
             fallback.put(EmotionType.NEUTRAL, 10000);
             return fallback;
         }
@@ -84,15 +125,11 @@ public class GeminiEmotionMapper {
             int val = (int) Math.round(intensity / total * 10000);
             bps.put(type, val);
             assigned += val;
-            if (val > maxVal) {
-                maxVal = val;
-                maxType = type;
-            }
+            if (val > maxVal) { maxVal = val; maxType = type; }
         }
 
         // 반올림 오차 보정 (합계 = 10000 보증)
-        int diff = 10000 - assigned;
-        bps.put(maxType, bps.get(maxType) + diff);
+        bps.put(maxType, bps.get(maxType) + (10000 - assigned));
         return bps;
     }
 
