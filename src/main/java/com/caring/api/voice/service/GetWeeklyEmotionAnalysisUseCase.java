@@ -19,9 +19,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+// 동점 tiebreaker: 케어 서비스 특성상 임상적으로 유의미한 감정 우선
+// SAD > ANGRY > FEAR > SURPRISE > HAPPY > NEUTRAL (낮을수록 높은 우선순위)
+
 @UseCase
 @RequiredArgsConstructor
 public class GetWeeklyEmotionAnalysisUseCase {
+
+    /**
+     * 동일 최빈값(tie) 발생 시 tiebreaker.
+     * 케어 서비스 특성상 돌봄이 필요한 부정 감정을 우선 선택한다.
+     * 값이 낮을수록 높은 우선순위 (0 = 최우선).
+     */
+    private static final Map<EmotionType, Integer> TIE_PRIORITY = Map.of(
+            EmotionType.SAD,      0,
+            EmotionType.ANGRY,    1,
+            EmotionType.FEAR,     2,
+            EmotionType.SURPRISE, 3,
+            EmotionType.HAPPY,    4,
+            EmotionType.NEUTRAL,  5
+    );
 
     private final VoiceCompositeAdaptor voiceCompositeAdaptor;
     private final GetWeeklyEmotionReportUseCase getWeeklyEmotionReportUseCase;
@@ -60,7 +77,11 @@ public class GetWeeklyEmotionAnalysisUseCase {
                     .filter(vc -> vc.getTopEmotion() != null)
                     .collect(Collectors.groupingBy(VoiceComposite::getTopEmotion, Collectors.counting()))
                     .entrySet().stream()
-                    .max(Comparator.comparingLong(Map.Entry::getValue))
+                    .max(Comparator
+                            .<Map.Entry<EmotionType, Long>>comparingLong(Map.Entry::getValue)
+                            // 동점(tie) 시: 임상적으로 유의미한 감정 우선 (TIE_PRIORITY 낮을수록 우선)
+                            .thenComparing(e -> TIE_PRIORITY.getOrDefault(e.getKey(), Integer.MAX_VALUE),
+                                    Comparator.reverseOrder()))
                     .map(Map.Entry::getKey)
                     .orElse(null);
 
