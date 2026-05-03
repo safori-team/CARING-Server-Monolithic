@@ -27,7 +27,7 @@ public class UploadVoiceFileUseCase {
     }
 
     public Long execute(String username, QuestionCategory questionCategory, int questionIndex,
-                        String voiceKey, String recordedAt) {
+                        String voiceKey) {
         validateQuestion(questionCategory, questionIndex);
         User user = userAdaptor.queryUserByUsername(username);
         Voice voice = voiceDomainService.uploadVoiceFile(user, voiceKey);

@@ -51,6 +51,7 @@ public class GetUserVoiceDetailUseCase {
         return VoiceDetailResponse.builder()
                 .voiceId(voiceId)
                 .createdAt(voice.getCreatedDate().toLocalDate())
+                .analysisStatus(voice.getAnalysisStatus())
                 .topEmotion(composite != null ? composite.getTopEmotion() : null)
                 .questionTitle(resolveQuestionTitle(voiceQuestion))
                 .content(voiceContent != null ? voiceContent.getContent() : null)

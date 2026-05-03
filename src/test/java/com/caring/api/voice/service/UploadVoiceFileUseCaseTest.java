@@ -40,7 +40,7 @@ class UploadVoiceFileUseCaseTest {
         UploadVoiceFileUseCase useCase = new UploadVoiceFileUseCase(
                 userAdaptor, voiceDomainService, geminiVoiceAnalyzer);
 
-        Long voiceId = useCase.execute(username, category, index, voiceKey, "2026-04-04T00:00:00");
+        Long voiceId = useCase.execute(username, category, index, voiceKey);
 
         assertThat(voiceId).isEqualTo(1L);
         verify(geminiVoiceAnalyzer).analyzeAsync(1L, voiceKey);
@@ -59,7 +59,7 @@ class UploadVoiceFileUseCaseTest {
         UploadVoiceFileUseCase useCase = new UploadVoiceFileUseCase(
                 userAdaptor, voiceDomainService, geminiVoiceAnalyzer);
 
-        Long voiceId = useCase.execute(username, QuestionCategory.EMOTION, 0, voiceKey, "2026-04-04T00:00:00");
+        Long voiceId = useCase.execute(username, QuestionCategory.EMOTION, 0, voiceKey);
 
         assertThat(voiceId).isEqualTo(42L);
     }

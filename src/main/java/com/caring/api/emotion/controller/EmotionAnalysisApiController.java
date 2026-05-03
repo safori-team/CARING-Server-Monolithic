@@ -28,15 +28,15 @@ public class EmotionAnalysisApiController {
 
     @GetMapping("/monthly")
     public ApiResponseDto<MonthlyAnalysisCombinedResponse> getCareEmotionMonthly(@UserCode String username,
-                                                                                 @RequestParam String month) {
-        return ApiResponseDto.onSuccess(getMonthlyEmotionAnalysisUseCase.execute(username, month));
+                                                                                 @RequestParam String yearMonth) {
+        return ApiResponseDto.onSuccess(getMonthlyEmotionAnalysisUseCase.execute(username, yearMonth));
     }
 
     @GetMapping("/weekly")
     public ApiResponseDto<WeeklyAnalysisCombinedResponse> getCareEmotionWeekly(@UserCode String username,
-                                                                               @RequestParam String month,
+                                                                               @RequestParam String yearMonth,
                                                                                @RequestParam int week) {
-        return ApiResponseDto.onSuccess(getWeeklyEmotionAnalysisUseCase.execute(username, month, week));
+        return ApiResponseDto.onSuccess(getWeeklyEmotionAnalysisUseCase.execute(username, yearMonth, week));
     }
 
     /**

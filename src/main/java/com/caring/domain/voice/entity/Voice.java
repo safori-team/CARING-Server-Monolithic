@@ -27,7 +27,7 @@ public class Voice extends BaseTimeEntity {
     private int bitRate;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "VARCHAR(16) NOT NULL DEFAULT 'COMPLETED'")
     private AnalysisStatus analysisStatus;
 
     private LocalDateTime analysisCompletedAt;

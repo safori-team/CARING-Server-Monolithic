@@ -30,6 +30,6 @@ public final class GeminiEmotionMapping {
      */
     public static Optional<EmotionType> resolve(String label, String category) {
         if (category == null) return Optional.empty();
-        return Optional.ofNullable(CATEGORY_MAP.get(category));
+        return Optional.ofNullable(CATEGORY_MAP.get(category.toLowerCase()));
     }
 }

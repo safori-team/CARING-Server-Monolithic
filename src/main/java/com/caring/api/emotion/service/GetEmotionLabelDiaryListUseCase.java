@@ -4,7 +4,6 @@ import com.caring.api.emotion.dto.EmotionLabelDiaryListResponse;
 import com.caring.api.voice.dto.VoiceListItem;
 import com.caring.common.annotation.UseCase;
 import com.caring.common.consts.UserServiceQuestionStaticValues;
-import com.caring.common.service.S3PresignService;
 import com.caring.domain.question.entity.VoiceQuestion;
 import com.caring.domain.voice.adaptor.VoiceCompositeAdaptor;
 import com.caring.domain.voice.adaptor.VoiceEmotionLabelAdaptor;
@@ -12,13 +11,11 @@ import com.caring.domain.voice.entity.Voice;
 import com.caring.domain.voice.entity.VoiceComposite;
 import com.caring.domain.voice.entity.VoiceContent;
 import com.caring.domain.voice.repository.VoiceContentRepository;
-import com.caring.domain.voice.repository.VoiceEmotionLabelRepository;
 import com.caring.domain.voice.repository.VoiceQuestionRepository;
 
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -29,25 +26,19 @@ import java.util.stream.Collectors;
 public class GetEmotionLabelDiaryListUseCase {
 
     private final VoiceEmotionLabelAdaptor voiceEmotionLabelAdaptor;
-    private final VoiceEmotionLabelRepository voiceEmotionLabelRepository;
     private final VoiceCompositeAdaptor voiceCompositeAdaptor;
     private final VoiceQuestionRepository voiceQuestionRepository;
     private final VoiceContentRepository voiceContentRepository;
-    private final Optional<S3PresignService> s3PresignService;
 
     public GetEmotionLabelDiaryListUseCase(
             VoiceEmotionLabelAdaptor voiceEmotionLabelAdaptor,
-            VoiceEmotionLabelRepository voiceEmotionLabelRepository,
             VoiceCompositeAdaptor voiceCompositeAdaptor,
             VoiceQuestionRepository voiceQuestionRepository,
-            VoiceContentRepository voiceContentRepository,
-            Optional<S3PresignService> s3PresignService) {
+            VoiceContentRepository voiceContentRepository) {
         this.voiceEmotionLabelAdaptor = voiceEmotionLabelAdaptor;
-        this.voiceEmotionLabelRepository = voiceEmotionLabelRepository;
         this.voiceCompositeAdaptor = voiceCompositeAdaptor;
         this.voiceQuestionRepository = voiceQuestionRepository;
         this.voiceContentRepository = voiceContentRepository;
-        this.s3PresignService = s3PresignService;
     }
 
     public EmotionLabelDiaryListResponse execute(String username, String yearMonth, String label) {
@@ -55,21 +46,19 @@ public class GetEmotionLabelDiaryListUseCase {
         List<Voice> voices = voiceEmotionLabelAdaptor.findVoicesByLabel(
                 username, label, ym.getYear(), ym.getMonthValue());
 
-        // category 조회 (첫 번째 Voice의 레이블에서 추출)
+        // category 조회 — Adaptor를 통해 첫 번째 Voice의 레이블에서 추출
         String category = voices.isEmpty() ? null :
-                voiceEmotionLabelRepository.findByVoice_Id(voices.get(0).getId()).stream()
+                voiceEmotionLabelAdaptor.findByVoiceId(voices.get(0).getId()).stream()
                         .filter(vel -> label.equals(vel.getLabel()))
                         .map(vel -> vel.getCategory())
                         .findFirst()
                         .orElse(null);
 
-        List<VoiceListItem> diaries = toVoiceListItems(voices);
-
         return EmotionLabelDiaryListResponse.builder()
                 .yearMonth(yearMonth)
                 .label(label)
                 .category(category)
-                .diaries(diaries)
+                .diaries(toVoiceListItems(voices))
                 .build();
     }
 
@@ -89,6 +78,7 @@ public class GetEmotionLabelDiaryListUseCase {
                 .map(v -> VoiceListItem.builder()
                         .voiceId(v.getId())
                         .createdAt(v.getCreatedDate().toLocalDate())
+                        .analysisStatus(v.getAnalysisStatus())
                         .emotion(compositeMap.containsKey(v.getId())
                                 ? compositeMap.get(v.getId()).getTopEmotion()
                                 : null)
@@ -96,7 +86,6 @@ public class GetEmotionLabelDiaryListUseCase {
                         .content(contentMap.containsKey(v.getId())
                                 ? contentMap.get(v.getId()).getContent()
                                 : null)
-                        .s3Url(s3PresignService.map(svc -> svc.generateGetUrl(v.getVoiceKey())).orElse(null))
                         .build())
                 .collect(Collectors.toList());
     }
