@@ -44,11 +44,11 @@ public class GetWeeklyEmotionAnalysisUseCase {
     private final GetWeeklyEmotionReportUseCase getWeeklyEmotionReportUseCase;
 
     /**
-     * @param month "yyyy-MM" 형식
-     * @param week  1-indexed 주차 (1 = 첫째 주)
+     * @param yearMonth "yyyy-MM" 형식
+     * @param week      1-indexed 주차 (1 = 첫째 주)
      */
-    public WeeklyAnalysisCombinedResponse execute(String username, String month, int week) {
-        DateRangeUtil.DateRange range = DateRangeUtil.calendarWeekRange(month, week);
+    public WeeklyAnalysisCombinedResponse execute(String username, String yearMonth, int week) {
+        DateRangeUtil.DateRange range = DateRangeUtil.calendarWeekRange(yearMonth, week);
         LocalDate weekStart = range.getStart().toLocalDate();
         LocalDate rangeStart = range.getStart().toLocalDate();
         LocalDate rangeEndExclusive = range.getEnd().toLocalDate();
@@ -94,7 +94,7 @@ public class GetWeeklyEmotionAnalysisUseCase {
 
         String reportMessage = getWeeklyEmotionReportUseCase.execute(
                 username,
-                month,
+                yearMonth,
                 week,
                 weeklyEmotions,
                 composites

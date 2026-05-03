@@ -7,6 +7,7 @@ import com.caring.common.exception.Reason;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import java.time.format.DateTimeParseException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -56,6 +57,12 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
                 });
 
         return handleExceptionInternalArgs(e, HttpHeaders.EMPTY, ErrorStatus.valueOf("_BAD_REQUEST"), request, errors);
+    }
+
+    @ExceptionHandler({DateTimeParseException.class, IllegalArgumentException.class})
+    public ResponseEntity<Object> badRequest(RuntimeException e, WebRequest request) {
+        return handleExceptionInternalFalse(e, ErrorStatus._BAD_REQUEST, HttpHeaders.EMPTY,
+                HttpStatus.BAD_REQUEST, request, e.getMessage());
     }
 
     @ExceptionHandler

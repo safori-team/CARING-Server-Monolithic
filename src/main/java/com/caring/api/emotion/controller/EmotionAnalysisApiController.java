@@ -26,17 +26,41 @@ public class EmotionAnalysisApiController {
     private final GetMonthlyEmotionBubbleUseCase getMonthlyEmotionBubbleUseCase;
     private final GetEmotionLabelDiaryListUseCase getEmotionLabelDiaryListUseCase;
 
+    /**
+     * @param yearMonth "yyyy-MM" 형식 (신규 파라미터명)
+     * @param month     "yyyy-MM" 형식 (구버전 호환, 하위 호환 지원 기간 후 제거 예정)
+     */
     @GetMapping("/monthly")
-    public ApiResponseDto<MonthlyAnalysisCombinedResponse> getCareEmotionMonthly(@UserCode String username,
-                                                                                 @RequestParam String yearMonth) {
-        return ApiResponseDto.onSuccess(getMonthlyEmotionAnalysisUseCase.execute(username, yearMonth));
+    public ApiResponseDto<MonthlyAnalysisCombinedResponse> getCareEmotionMonthly(
+            @UserCode String username,
+            @RequestParam(required = false) String yearMonth,
+            @RequestParam(required = false) String month) {
+        return ApiResponseDto.onSuccess(
+                getMonthlyEmotionAnalysisUseCase.execute(username, resolveYearMonth(yearMonth, month)));
     }
 
+    /**
+     * @param yearMonth "yyyy-MM" 형식 (신규 파라미터명)
+     * @param month     "yyyy-MM" 형식 (구버전 호환, 하위 호환 지원 기간 후 제거 예정)
+     */
     @GetMapping("/weekly")
-    public ApiResponseDto<WeeklyAnalysisCombinedResponse> getCareEmotionWeekly(@UserCode String username,
-                                                                               @RequestParam String yearMonth,
-                                                                               @RequestParam int week) {
-        return ApiResponseDto.onSuccess(getWeeklyEmotionAnalysisUseCase.execute(username, yearMonth, week));
+    public ApiResponseDto<WeeklyAnalysisCombinedResponse> getCareEmotionWeekly(
+            @UserCode String username,
+            @RequestParam(required = false) String yearMonth,
+            @RequestParam(required = false) String month,
+            @RequestParam int week) {
+        return ApiResponseDto.onSuccess(
+                getWeeklyEmotionAnalysisUseCase.execute(username, resolveYearMonth(yearMonth, month), week));
+    }
+
+    /**
+     * yearMonth(신규) 또는 month(구버전 호환) 중 하나를 받아 유효한 값을 반환.
+     * 둘 다 null이면 필수 파라미터 누락으로 예외를 발생시킨다.
+     */
+    private String resolveYearMonth(String yearMonth, String month) {
+        if (yearMonth != null) return yearMonth;
+        if (month != null) return month;
+        throw new IllegalArgumentException("필수 파라미터 'yearMonth'가 누락되었습니다.");
     }
 
     /**
