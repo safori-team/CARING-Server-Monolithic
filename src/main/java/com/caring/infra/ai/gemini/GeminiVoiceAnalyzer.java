@@ -1,5 +1,6 @@
 package com.caring.infra.ai.gemini;
 
+import com.caring.common.event.VoiceAnalysisCompletedEvent;
 import com.caring.domain.voice.adaptor.VoiceAdaptor;
 import com.caring.domain.voice.adaptor.VoiceCompositeAdaptor;
 import com.caring.domain.voice.adaptor.VoiceContentAdaptor;
@@ -21,6 +22,7 @@ import com.google.genai.types.Type;
 import com.google.genai.types.UploadFileConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.ResponseBytes;
@@ -75,6 +77,7 @@ public class GeminiVoiceAnalyzer {
     private final GeminiEmotionMapper emotionMapper;
     private final String s3Bucket;
     private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     public GeminiVoiceAnalyzer(
             Optional<Client> geminiClient,
@@ -86,7 +89,8 @@ public class GeminiVoiceAnalyzer {
             VoiceEmotionLabelAdaptor voiceEmotionLabelAdaptor,
             GeminiEmotionMapper emotionMapper,
             @Value("${spring.cloud.aws.s3.bucket:}") String s3Bucket,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            ApplicationEventPublisher eventPublisher) {
         this.geminiClient = geminiClient;
         this.modelName = modelName;
         this.s3Client = s3Client;
@@ -97,6 +101,7 @@ public class GeminiVoiceAnalyzer {
         this.emotionMapper = emotionMapper;
         this.s3Bucket = s3Bucket;
         this.objectMapper = objectMapper;
+        this.eventPublisher = eventPublisher;
     }
 
     @Async
@@ -135,6 +140,7 @@ public class GeminiVoiceAnalyzer {
             log.info("Gemini analysis saved for voiceId={}, topEmotion={}, labels={}, transcript={}chars",
                     voiceId, composite.getTopEmotion(), labels.size(),
                     result.transcript() != null ? result.transcript().length() : 0);
+            eventPublisher.publishEvent(new VoiceAnalysisCompletedEvent(voiceId));
         } catch (Exception e) {
             log.error("Gemini analysis failed for voiceId={}, voiceKey={}", voiceId, voiceKey, e);
             try {
