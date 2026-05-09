@@ -39,7 +39,14 @@ public enum ErrorStatus implements BaseErrorCode{
 
     //voice(4150-4199)
     VOICE_NOT_FOUND(BAD_REQUEST, 4150, "존재하지 않는 음성파일입니다."),
-    VOICE_NO_PERMISSION(BAD_REQUEST, 4151, "음성파일의 접근권한이 없습니다.");
+    VOICE_NO_PERMISSION(BAD_REQUEST, 4151, "음성파일의 접근권한이 없습니다."),
+
+    //chatbot(4200-4249)
+    CHAT_SESSION_NOT_FOUND(BAD_REQUEST, 4200, "존재하지 않는 챗봇 세션입니다."),
+    CHAT_SESSION_NO_PERMISSION(BAD_REQUEST, 4201, "챗봇 세션의 접근권한이 없습니다."),
+    CHAT_MESSAGE_NOT_FOUND(BAD_REQUEST, 4202, "존재하지 않는 채팅 메시지입니다."),
+    CHAT_MESSAGE_NO_PERMISSION(BAD_REQUEST, 4203, "채팅 메시지의 접근권한이 없습니다."),
+    CHAT_FEEDBACK_INVALID_EMOTION(BAD_REQUEST, 4204, "유효하지 않은 감정 피드백 값입니다.");
 
     // user (4050-4099)
     // schedule (4100-4149)
