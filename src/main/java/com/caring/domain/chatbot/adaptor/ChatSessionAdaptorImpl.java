@@ -5,9 +5,9 @@ import com.caring.domain.chatbot.entity.ChatSession;
 import com.caring.domain.chatbot.exception.ChatbotHandler;
 import com.caring.domain.chatbot.repository.ChatSessionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Adaptor
 @Transactional(readOnly = true)
@@ -23,8 +23,8 @@ public class ChatSessionAdaptorImpl implements ChatSessionAdaptor {
     }
 
     @Override
-    public List<ChatSession> queryByUsername(String username) {
-        return repository.findByUser_UsernameOrderByLastModifiedDateDesc(username);
+    public Page<ChatSession> queryByUsername(String username, Pageable pageable) {
+        return repository.findByUser_UsernameOrderByLastModifiedDateDesc(username, pageable);
     }
 
     @Override

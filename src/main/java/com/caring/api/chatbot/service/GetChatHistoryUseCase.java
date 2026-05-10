@@ -24,21 +24,25 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GetChatHistoryUseCase {
 
-    private static final int PAGE_SIZE = 20;
+    private static final int DEFAULT_SIZE = 20;
+    private static final int MAX_SIZE = 100;
 
     private final UserAdaptor userAdaptor;
     private final ChatSessionAdaptor chatSessionAdaptor;
     private final ChatMessageAdaptor chatMessageAdaptor;
     private final ChatbotDomainService chatbotDomainService;
 
-    public ChatHistoryResponse execute(String username, String sessionId, int page) {
+    public ChatHistoryResponse execute(String username, String sessionId, int page, int size) {
         if (page < 1) page = 1;
+        if (size < 1) size = DEFAULT_SIZE;
+        if (size > MAX_SIZE) size = MAX_SIZE;
+
         User user = userAdaptor.queryUserByUsername(username);
         ChatSession session = chatSessionAdaptor.queryById(sessionId);
         chatbotDomainService.verifyOwnership(session, user);
 
         Page<ChatMessage> p = chatMessageAdaptor.queryBySessionId(
-                sessionId, PageRequest.of(page - 1, PAGE_SIZE));
+                sessionId, PageRequest.of(page - 1, size));
         List<ChatMessage> ordered = new ArrayList<>(p.getContent());
         Collections.reverse(ordered);
 
@@ -77,8 +81,11 @@ public class GetChatHistoryUseCase {
         return new ChatHistoryResponse(
                 sessionId,
                 messages,
+                page,
+                size,
+                p.getTotalElements(),
                 p.getTotalPages() == 0 ? 1 : p.getTotalPages(),
-                page
+                p.hasNext()
         );
     }
 

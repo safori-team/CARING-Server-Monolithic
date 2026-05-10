@@ -6,8 +6,9 @@ import com.caring.api.chatbot.dto.FeedbackRequest;
 import com.caring.api.chatbot.dto.FeedbackResponse;
 import com.caring.api.chatbot.dto.ReframingRequest;
 import com.caring.api.chatbot.dto.ReframingResponse;
-import com.caring.api.chatbot.dto.SessionListResponse;
+import com.caring.api.chatbot.dto.ChatSessionItemResponse;
 import com.caring.api.chatbot.dto.VoiceReframingRequest;
+import com.caring.api.common.dto.PagedResponse;
 import com.caring.api.chatbot.service.CreateChatSessionUseCase;
 import com.caring.api.chatbot.service.DeleteChatSessionUseCase;
 import com.caring.api.chatbot.service.GetChatHistoryUseCase;
@@ -93,28 +94,45 @@ public class ChatbotApiController {
 
     @GetMapping("/sessions")
     @Operation(
-            summary = "내 채팅방 목록 조회 (최신 활동순)",
+            summary = "내 채팅방 목록 조회 (최신 활동순, 페이징)",
             description = """
-                    홈/채팅 목록 화면에서 사용. 사용자의 모든 세션을 마지막 메시지 시각 기준 내림차순으로 반환.
+                    홈/채팅 목록 화면에서 사용. 사용자의 세션을 마지막 메시지 시각 기준 내림차순으로 반환.
+
+                    페이징:
+                      • page (1-based, default 1)
+                      • size (default 20, max 100)
+
+                    응답은 표준 PagedResponse 형상:
+                      { items, page, size, totalElements, totalPages, hasNext }
 
                     각 세션 미리보기 항목:
-                      • lastMessage          - 마지막 사용자 발화 (마음일기 트리거 세션이면 null)
-                      • lastUpdated          - 세션 lastModifiedDate
-                      • distortionTags       - 마지막 메시지의 detected_distortion ('없음'이면 빈 배열)
-                      • emotion              - 사용자 피드백(feedback_emotion) > 봇 분석(emotion) 우선순위로 노출
+                      • lastMessage    - 마지막 사용자 발화 (마음일기 트리거 세션이면 null)
+                      • lastUpdated    - 세션 lastModifiedDate
+                      • distortionTags - 마지막 메시지의 detected_distortion ('없음'이면 빈 배열)
+                      • emotion        - 사용자 피드백(feedback_emotion) > 봇 분석(emotion) 우선
                     """)
-    public ApiResponseDto<SessionListResponse> getSessions(@UserCode String username) {
-        return ApiResponseDto.onSuccess(getChatSessionsUseCase.execute(username));
+    public ApiResponseDto<PagedResponse<ChatSessionItemResponse>> getSessions(
+            @UserCode String username,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return ApiResponseDto.onSuccess(getChatSessionsUseCase.execute(username, page, size));
     }
 
     @GetMapping("/history/{sessionId}")
     @Operation(
             summary = "채팅 상세 (메시지 페이징)",
             description = """
-                    특정 세션의 대화 내용을 페이지 단위(20건)로 시간순 반환.
+                    특정 세션의 대화 내용을 페이지 단위로 시간순 반환.
+
+                    페이징:
+                      • page (1-based, default 1)
+                      • size (default 20, max 100)
+
+                    응답: sessionId + 표준 PagedResponse 필드(items, page, size, totalElements, totalPages, hasNext).
 
                     응답 구조 주의:
-                      • DB row 1개 = user 발화 + assistant 응답 한 쌍이 펼쳐져 messages 배열에 두 항목으로 노출됨
+                      • DB row 1개 = user 발화 + assistant 응답 한 쌍이 펼쳐져 items 배열에 두 항목으로 노출됨
                       • 같은 한 쌍은 동일한 messageId를 공유 (assistant 행에 피드백 PUT을 쏘면 됨)
                       • 마음일기 트리거(MIND_DIARY) 메시지는 user 발화 없이 assistant 항목만 포함
 
@@ -132,9 +150,10 @@ public class ChatbotApiController {
     public ApiResponseDto<ChatHistoryResponse> getHistory(
             @UserCode String username,
             @PathVariable String sessionId,
-            @RequestParam(defaultValue = "1") int page
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size
     ) {
-        return ApiResponseDto.onSuccess(getChatHistoryUseCase.execute(username, sessionId, page));
+        return ApiResponseDto.onSuccess(getChatHistoryUseCase.execute(username, sessionId, page, size));
     }
 
     @PostMapping("/reframing")
