@@ -1,22 +1,16 @@
 package com.caring.api.voice.service;
 
-import com.caring.common.consts.UserServiceQuestionStaticValues;
-import com.caring.common.service.S3PresignService;
 import com.caring.domain.question.entity.QuestionCategory;
 import com.caring.domain.user.adaptor.UserAdaptor;
 import com.caring.domain.user.entity.User;
 import com.caring.domain.voice.entity.Voice;
 import com.caring.domain.voice.service.VoiceDomainService;
-import com.caring.infra.ai.hume.scheduler.DiaryBatchItem;
-import com.caring.infra.ai.hume.scheduler.HumeBatchScheduler;
+import com.caring.infra.ai.gemini.GeminiVoiceAnalyzer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -27,66 +21,46 @@ class UploadVoiceFileUseCaseTest {
 
     @Mock UserAdaptor userAdaptor;
     @Mock VoiceDomainService voiceDomainService;
-    @Mock HumeBatchScheduler humeBatchScheduler;
-    @Mock S3PresignService s3PresignService;
+    @Mock GeminiVoiceAnalyzer geminiVoiceAnalyzer;
     @Mock User user;
     @Mock Voice voice;
 
     @Test
-    @DisplayName("업로드 성공 - Hume에 presigned GET URL 전달")
-    void execute_withS3_sendPresignedGetUrlToHume() {
-        // given
+    @DisplayName("업로드 성공 - Gemini 분석 비동기 트리거")
+    void execute_triggersGeminiAnalysisAsync() {
         String username = "testUser";
         String voiceKey = "voices/testUser/uuid.m4a";
-        String presignedGetUrl = "https://bucket.s3.amazonaws.com/" + voiceKey + "?X-Amz-Signature=xyz";
         QuestionCategory category = QuestionCategory.EMOTION;
         int index = 0;
 
         given(userAdaptor.queryUserByUsername(username)).willReturn(user);
-        given(user.getUserUuid()).willReturn("user-uuid-123");
-        given(user.getName()).willReturn("홍길동");
         given(voiceDomainService.uploadVoiceFile(user, voiceKey)).willReturn(voice);
         given(voice.getId()).willReturn(1L);
-        given(s3PresignService.generateGetUrl(voiceKey)).willReturn(presignedGetUrl);
 
         UploadVoiceFileUseCase useCase = new UploadVoiceFileUseCase(
-                userAdaptor, voiceDomainService, humeBatchScheduler, Optional.of(s3PresignService));
+                userAdaptor, voiceDomainService, geminiVoiceAnalyzer);
 
-        // when
-        Long voiceId = useCase.execute(username, category, index, voiceKey, "2026-04-04T00:00:00");
+        Long voiceId = useCase.execute(username, category, index, voiceKey);
 
-        // then
         assertThat(voiceId).isEqualTo(1L);
-
-        ArgumentCaptor<DiaryBatchItem> captor = ArgumentCaptor.forClass(DiaryBatchItem.class);
-        verify(humeBatchScheduler).enqueue(captor.capture());
-
-        DiaryBatchItem enqueuedItem = captor.getValue();
-        assertThat(enqueuedItem.s3Url()).isEqualTo(presignedGetUrl);
-        assertThat(enqueuedItem.userId()).isEqualTo("user-uuid-123");
-        assertThat(enqueuedItem.question()).isEqualTo(
-                UserServiceQuestionStaticValues.QUESTION_MAP.get("EMOTION").get(0));
+        verify(geminiVoiceAnalyzer).analyzeAsync(1L, voiceKey);
     }
 
     @Test
-    @DisplayName("S3 미설정 시 - Hume enqueue 건너뜀")
-    void execute_withoutS3_skipsHumeEnqueue() {
-        // given
+    @DisplayName("voiceId 즉시 반환 - 분석은 비동기")
+    void execute_returnsVoiceIdImmediately() {
         String username = "testUser";
         String voiceKey = "voices/testUser/uuid.m4a";
 
         given(userAdaptor.queryUserByUsername(username)).willReturn(user);
         given(voiceDomainService.uploadVoiceFile(user, voiceKey)).willReturn(voice);
-        given(voice.getId()).willReturn(1L);
+        given(voice.getId()).willReturn(42L);
 
         UploadVoiceFileUseCase useCase = new UploadVoiceFileUseCase(
-                userAdaptor, voiceDomainService, humeBatchScheduler, Optional.empty());
+                userAdaptor, voiceDomainService, geminiVoiceAnalyzer);
 
-        // when
-        Long voiceId = useCase.execute(username, QuestionCategory.EMOTION, 0, voiceKey, "2026-04-04T00:00:00");
+        Long voiceId = useCase.execute(username, QuestionCategory.EMOTION, 0, voiceKey);
 
-        // then
-        assertThat(voiceId).isEqualTo(1L);
-        org.mockito.Mockito.verify(humeBatchScheduler, org.mockito.Mockito.never()).enqueue(org.mockito.ArgumentMatchers.any());
+        assertThat(voiceId).isEqualTo(42L);
     }
 }

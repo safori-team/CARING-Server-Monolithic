@@ -1,6 +1,7 @@
 package com.caring.api.voice.dto;
 
 import com.caring.domain.emotion.entity.EmotionType;
+import com.caring.domain.voice.entity.Voice;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +18,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 public class VoiceDetailResponse {
     private final Long voiceId;
     private final LocalDate createdAt;
+    private final Voice.AnalysisStatus analysisStatus;
     private final EmotionType topEmotion;
     private final String questionTitle;
     private final String content;

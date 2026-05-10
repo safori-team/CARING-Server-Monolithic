@@ -72,10 +72,9 @@ public class VoiceApiController {
     public ApiResponseDto<Long> uploadVoiceWithQuestion(@UserCode String username,
                                                         @RequestParam QuestionCategory questionCategory,
                                                         @RequestParam int questionIndex,
-                                                        @RequestParam String voiceKey,
-                                                        @RequestParam String recordedAt) {
+                                                        @RequestParam String voiceKey) {
         return ApiResponseDto.onSuccess(
-                uploadVoiceFileUsecase.execute(username, questionCategory, questionIndex, voiceKey, recordedAt));
+                uploadVoiceFileUsecase.execute(username, questionCategory, questionIndex, voiceKey));
     }
 
     @PostMapping("/test-dummy")

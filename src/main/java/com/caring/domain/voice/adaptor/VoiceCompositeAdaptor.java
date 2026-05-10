@@ -9,4 +9,5 @@ public interface VoiceCompositeAdaptor {
 
     List<VoiceComposite> queryByUsernameAndDateRange(String username, LocalDateTime start, LocalDateTime end);
     List<VoiceComposite> queryByVoiceIds(List<Long> voiceIds);
+    VoiceComposite save(VoiceComposite voiceComposite);
 }

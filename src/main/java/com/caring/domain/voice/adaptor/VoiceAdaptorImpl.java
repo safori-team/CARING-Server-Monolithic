@@ -36,4 +36,10 @@ public class VoiceAdaptorImpl implements VoiceAdaptor{
         LocalDateTime end = createdAt.plusDays(1).atStartOfDay();
         return voiceRepository.findByUser_UsernameAndCreatedDateBetween(username, start, end);
     }
+
+    @Override
+    @Transactional
+    public Voice save(Voice voice) {
+        return voiceRepository.save(voice);
+    }
 }

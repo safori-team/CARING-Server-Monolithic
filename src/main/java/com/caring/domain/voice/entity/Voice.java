@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -24,7 +26,30 @@ public class Voice extends BaseTimeEntity {
     private int sampleRate;
     private int bitRate;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "VARCHAR(16) NOT NULL DEFAULT 'COMPLETED'")
+    private AnalysisStatus analysisStatus;
+
+    private LocalDateTime analysisCompletedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    public void markAnalysisPending() {
+        this.analysisStatus = AnalysisStatus.PENDING;
+    }
+
+    public void markAnalysisCompleted() {
+        this.analysisStatus = AnalysisStatus.COMPLETED;
+        this.analysisCompletedAt = LocalDateTime.now();
+    }
+
+    public void markAnalysisFailed() {
+        this.analysisStatus = AnalysisStatus.FAILED;
+    }
+
+    public enum AnalysisStatus {
+        PENDING, COMPLETED, FAILED
+    }
 }

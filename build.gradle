@@ -36,7 +36,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     // Spring Data Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    // Spring WebFlux (WebClient)
+    // Spring WebFlux (WebClient - OpenAI 리포트에서 사용 중)
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
     // Swagger / OpenAPI
@@ -61,11 +61,15 @@ dependencies {
     implementation 'com.google.firebase:firebase-admin:9.6.0'
     implementation 'com.google.guava:guava:32.1.2-jre'
 
-    // Spring Cloud AWS SQS
-    implementation platform('io.awspring.cloud:spring-cloud-aws-dependencies:3.3.0')
-    implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
+    // Google Gemini SDK (2026-04-30 GA)
+    implementation 'com.google.genai:google-genai:1.52.0'
+    // google-genai jar 내부에 META-INF/services/KotlinModule 등록이 내장되어 있어
+    // Hibernate ObjectMapper.findAndRegisterModules() 시 클래스를 찾을 수 있어야 함
+    runtimeOnly 'com.fasterxml.jackson.module:jackson-module-kotlin'
+    runtimeOnly 'org.jetbrains.kotlin:kotlin-reflect'
 
-    // AWS SDK S3 (Presigned URL)
+    // AWS SDK S3 (Presigned URL + 파일 다운로드)
+    implementation platform('software.amazon.awssdk:bom:2.26.22')
     implementation 'software.amazon.awssdk:s3'
 
     // Prometheus

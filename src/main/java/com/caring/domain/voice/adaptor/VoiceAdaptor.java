@@ -11,4 +11,5 @@ public interface VoiceAdaptor {
     Voice queryById(Long voiceId);
     List<Voice> queryByUsername(String username);
     List<Voice> queryByUsernameAndCreatedAt(String username, LocalDate createdAt);
+    Voice save(Voice voice);
 }

@@ -2,7 +2,6 @@ package com.caring.api.voice.service;
 
 import com.caring.common.annotation.UseCase;
 import com.caring.common.consts.UserServiceQuestionStaticValues;
-import com.caring.common.service.S3PresignService;
 import com.caring.domain.question.entity.VoiceQuestion;
 import com.caring.domain.voice.adaptor.VoiceAdaptor;
 import com.caring.domain.voice.adaptor.VoiceCompositeAdaptor;
@@ -17,7 +16,6 @@ import com.caring.api.voice.dto.VoiceListResponse;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @UseCase
@@ -27,18 +25,15 @@ public class GetUserVoiceListUseCase {
     private final VoiceCompositeAdaptor voiceCompositeAdaptor;
     private final VoiceQuestionRepository voiceQuestionRepository;
     private final VoiceContentRepository voiceContentRepository;
-    private final Optional<S3PresignService> s3PresignService;
 
     public GetUserVoiceListUseCase(VoiceAdaptor voiceAdaptor,
                                    VoiceCompositeAdaptor voiceCompositeAdaptor,
                                    VoiceQuestionRepository voiceQuestionRepository,
-                                   VoiceContentRepository voiceContentRepository,
-                                   Optional<S3PresignService> s3PresignService) {
+                                   VoiceContentRepository voiceContentRepository) {
         this.voiceAdaptor = voiceAdaptor;
         this.voiceCompositeAdaptor = voiceCompositeAdaptor;
         this.voiceQuestionRepository = voiceQuestionRepository;
         this.voiceContentRepository = voiceContentRepository;
-        this.s3PresignService = s3PresignService;
     }
 
     public VoiceListResponse execute(String username, String date) {
@@ -70,6 +65,7 @@ public class GetUserVoiceListUseCase {
                 .map(v -> VoiceListItem.builder()
                         .voiceId(v.getId())
                         .createdAt(v.getCreatedDate().toLocalDate())
+                        .analysisStatus(v.getAnalysisStatus())
                         .emotion(compositeByVoiceId.containsKey(v.getId())
                                 ? compositeByVoiceId.get(v.getId()).getTopEmotion()
                                 : null)
@@ -77,15 +73,8 @@ public class GetUserVoiceListUseCase {
                         .content(contentByVoiceId.containsKey(v.getId())
                                 ? contentByVoiceId.get(v.getId()).getContent()
                                 : null)
-                        .s3Url(resolveUrl(v.getVoiceKey()))
                         .build())
                 .collect(Collectors.toList());
-    }
-
-    private String resolveUrl(String voiceKey) {
-        return s3PresignService
-                .map(svc -> svc.generateGetUrl(voiceKey))
-                .orElse(null);
     }
 
     private String resolveQuestionTitle(VoiceQuestion voiceQuestion) {
