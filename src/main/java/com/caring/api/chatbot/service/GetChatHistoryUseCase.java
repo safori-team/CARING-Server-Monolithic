@@ -9,6 +9,7 @@ import com.caring.domain.chatbot.entity.ChatMessage;
 import com.caring.domain.chatbot.entity.ChatSession;
 import com.caring.domain.chatbot.entity.MessageOrigin;
 import com.caring.domain.chatbot.service.ChatbotDomainService;
+import com.caring.domain.chatbot.service.ChatbotMessageMapper;
 import com.caring.domain.user.adaptor.UserAdaptor;
 import com.caring.domain.user.entity.User;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -31,6 +32,7 @@ public class GetChatHistoryUseCase {
     private final ChatSessionAdaptor chatSessionAdaptor;
     private final ChatMessageAdaptor chatMessageAdaptor;
     private final ChatbotDomainService chatbotDomainService;
+    private final ChatbotMessageMapper mapper;
 
     public ChatHistoryResponse execute(String username, String sessionId, int page, int size) {
         if (page < 1) page = 1;
@@ -59,8 +61,6 @@ public class GetChatHistoryUseCase {
                 ));
             }
             JsonNode bot = m.getBotResponse();
-            String emotion = text(bot, "emotion");
-            if (emotion == null) emotion = text(bot, "top_emotion");
             messages.add(new ChatMessageItemResponse(
                     m.getId(),
                     "assistant",
@@ -70,7 +70,7 @@ public class GetChatHistoryUseCase {
                     text(bot, "analysis"),
                     text(bot, "socratic_question"),
                     text(bot, "alternative_thought"),
-                    emotion,
+                    mapper.emotion(bot),
                     m.getFeedbackEmotion() == null ? null : m.getFeedbackEmotion().getCode(),
                     m.getFeedbackDetail(),
                     m.getFeedbackAt(),

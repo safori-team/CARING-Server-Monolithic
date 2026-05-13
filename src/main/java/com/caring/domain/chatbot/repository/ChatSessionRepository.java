@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ChatSessionRepository extends JpaRepository<ChatSession, String> {
 
-    Page<ChatSession> findByUser_UsernameOrderByLastModifiedDateDesc(String username, Pageable pageable);
+    Page<ChatSession> findByUser_UsernameOrderByLastMessageAtDesc(String username, Pageable pageable);
 }
 

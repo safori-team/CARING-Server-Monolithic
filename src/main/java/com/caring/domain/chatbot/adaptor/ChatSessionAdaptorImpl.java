@@ -24,7 +24,7 @@ public class ChatSessionAdaptorImpl implements ChatSessionAdaptor {
 
     @Override
     public Page<ChatSession> queryByUsername(String username, Pageable pageable) {
-        return repository.findByUser_UsernameOrderByLastModifiedDateDesc(username, pageable);
+        return repository.findByUser_UsernameOrderByLastMessageAtDesc(username, pageable);
     }
 
     @Override

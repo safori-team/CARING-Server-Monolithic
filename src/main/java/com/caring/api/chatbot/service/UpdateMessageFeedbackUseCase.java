@@ -23,7 +23,8 @@ public class UpdateMessageFeedbackUseCase {
     @Transactional
     public FeedbackResponse execute(String username, Long messageId, FeedbackRequest request) {
         User user = userAdaptor.queryUserByUsername(username);
-        ChatMessage message = chatMessageAdaptor.queryById(messageId);
+        // fetch join — verifyOwnership에서 lazy 추가 쿼리 2회 방지
+        ChatMessage message = chatMessageAdaptor.queryByIdWithSessionAndUser(messageId);
         chatbotDomainService.verifyOwnership(message, user);
 
         DoranEmotion emotion = chatbotDomainService.parseFeedbackEmotion(request.emotion());
